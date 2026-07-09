@@ -35,9 +35,15 @@ import {
 
 type Step = 1 | 2 | 3 | 4
 
-interface CreateProjectDialogProps {
+export interface CreateProjectDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
+  /** Prefill project type when dialog opens */
+  initialType?: ProjectType
+  /** Prefill industry when dialog opens */
+  initialIndustry?: ProjectIndustry
+  /** Prefill project name when dialog opens */
+  initialName?: string
 }
 
 const PROJECT_TYPE_OPTIONS: {
@@ -130,27 +136,46 @@ const TOTAL_STEPS = 4
 export function CreateProjectDialog({
   open,
   onOpenChange,
+  initialType = 'website',
+  initialIndustry = 'technology',
+  initialName = '',
 }: CreateProjectDialogProps) {
   const { user } = useAuth()
   const createProject = useCreateProject()
   const navigate = useNavigate()
 
   const [step, setStep] = useState<Step>(1)
-  const [projectName, setProjectName] = useState('')
+  const [projectName, setProjectName] = useState(initialName)
   const [description, setDescription] = useState('')
-  const [projectType, setProjectType] = useState<ProjectType>('website')
-  const [industry, setIndustry] = useState<ProjectIndustry>('technology')
+  const [projectType, setProjectType] = useState<ProjectType>(initialType)
+  const [industry, setIndustry] = useState<ProjectIndustry>(initialIndustry)
   const [industryOpen, setIndustryOpen] = useState(false)
   const [theme, setTheme] = useState<ProjectTheme>('dark')
   const [targetAudience, setTargetAudience] =
     useState<ProjectTargetAudience>('startups')
 
+  // Sync prefill values when dialog opens or props change
+  const [lastOpen, setLastOpen] = useState(false)
+  if (open && !lastOpen) {
+    setLastOpen(true)
+    setStep(1)
+    setProjectName(initialName)
+    setDescription('')
+    setProjectType(initialType)
+    setIndustry(initialIndustry)
+    setTheme('dark')
+    setTargetAudience('startups')
+    setIndustryOpen(false)
+  } else if (!open && lastOpen) {
+    setLastOpen(false)
+  }
+
   const resetForm = () => {
     setStep(1)
-    setProjectName('')
+    setProjectName(initialName)
     setDescription('')
-    setProjectType('website')
-    setIndustry('technology')
+    setProjectType(initialType)
+    setIndustry(initialIndustry)
     setTheme('dark')
     setTargetAudience('startups')
     setIndustryOpen(false)

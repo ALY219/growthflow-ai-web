@@ -15,6 +15,7 @@ import { useAuth } from '@/hooks/useAuth'
 const NAV_ITEMS = [
   { to: '/app' as const, label: 'Dashboard', icon: LayoutDashboard },
   { to: '/app/projects' as const, label: 'Projects', icon: FolderOpen },
+  { to: '/app/templates' as const, label: 'Templates', icon: Sparkles },
   { to: '/app/settings' as const, label: 'Settings', icon: Settings },
 ]
 
