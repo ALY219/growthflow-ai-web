@@ -263,6 +263,8 @@ export interface WebsiteGenerationWizardProps {
   setStep: Dispatch<SetStateAction<WizardStep>>
   onSubmit: () => void
   isPending: boolean
+  /** Render as full-screen overlay instead of a dialog. Default: false */
+  variant?: 'dialog' | 'fullscreen'
 }
 
 /* ─────────────────────────────────────────────
@@ -278,6 +280,7 @@ export function WebsiteGenerationWizard({
   setStep,
   onSubmit,
   isPending,
+  variant = 'dialog',
 }: WebsiteGenerationWizardProps) {
   const updateConfig = useCallback(
     (patch: Partial<GenerationConfig>) =>
@@ -326,91 +329,131 @@ export function WebsiteGenerationWizard({
     onOpenChange(next)
   }
 
+  /* ── Shared content ── */
+  const wizardContent = (
+    <>
+      {/* ── Header ── */}
+      <div className="text-center space-y-1.5">
+        <h2 className="text-lg font-bold text-foreground">Generate Website</h2>
+        <p className="text-sm text-muted-foreground">
+          Step {step} of {TOTAL_STEPS} — {STEP_LABELS[step]}
+        </p>
+      </div>
+
+      {/* ── Progress dots ── */}
+      <div className="flex items-center justify-center gap-2 pt-1 pb-2">
+        {progressDots.map((dot) => (
+          <div
+            key={dot}
+            className={`size-2 rounded-full transition-colors duration-300 ${
+              dot <= step ? 'bg-primary' : 'bg-muted'
+            }`}
+          />
+        ))}
+      </div>
+
+      {/* ── Step content ── */}
+      <div className="relative overflow-hidden flex-1" style={{ minHeight: variant === 'fullscreen' ? 400 : 340 }}>
+        <AnimatePresence mode="wait" initial={false}>
+          {step === 1 && (
+            <Step1
+              key="s1"
+              config={config}
+              updateConfig={updateConfig}
+              catOpen={catRef}
+              goalOpen={goalRef}
+            />
+          )}
+          {step === 2 && (
+            <Step2 key="s2" config={config} updateConfig={updateConfig} />
+          )}
+          {step === 3 && (
+            <Step3 key="s3" config={config} updateConfig={updateConfig} />
+          )}
+          {step === 4 && (
+            <Step4 key="s4" config={config} updateConfig={updateConfig} />
+          )}
+          {step === 5 && (
+            <Step5 key="s5" config={config} updateConfig={updateConfig} />
+          )}
+          {step === 6 && (
+            <Step6 key="s6" config={config} />
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* ── Footer ── */}
+      <div className="flex items-center justify-between pt-2">
+        <Button
+          variant="outline"
+          onClick={step === 1 ? () => handleOpenChange(false) : handleBack}
+          className="gap-2"
+        >
+          <ChevronLeft className="size-4" />
+          {step === 1 ? 'Cancel' : 'Back'}
+        </Button>
+
+        {step < TOTAL_STEPS ? (
+          <Button
+            onClick={handleNext}
+            disabled={!canProceed[step]}
+            className="gap-2"
+          >
+            Continue
+            <ChevronRight className="size-4" />
+          </Button>
+        ) : (
+          <Button
+            onClick={onSubmit}
+            disabled={!canProceed[6]}
+            className="gap-2"
+          >
+            <Sparkles className="size-4" />
+            {isPending ? 'Generating...' : 'Generate Website'}
+          </Button>
+        )}
+      </div>
+    </>
+  )
+
+  /* ── Fullscreen variant ── */
+  if (variant === 'fullscreen') {
+    return (
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            className="fixed inset-0 z-50 flex flex-col bg-background"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            {/* Close button (top-right) */}
+            <div className="absolute top-4 right-4 z-10">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleOpenChange(false)}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                ✕
+              </Button>
+            </div>
+
+            <div className="flex-1 max-w-2xl w-full mx-auto px-4 py-8 flex flex-col justify-center">
+              {wizardContent}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    )
+  }
+
+  /* ── Dialog variant (default) ── */
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-xl lg:max-w-2xl">
-        {/* ── Header ── */}
-        <div className="text-center space-y-1.5">
-          <h2 className="text-lg font-bold text-foreground">Generate Website</h2>
-          <p className="text-sm text-muted-foreground">
-            Step {step} of {TOTAL_STEPS} — {STEP_LABELS[step]}
-          </p>
-        </div>
-
-        {/* ── Progress dots ── */}
-        <div className="flex items-center justify-center gap-2 pt-1 pb-2">
-          {progressDots.map((dot) => (
-            <div
-              key={dot}
-              className={`size-2 rounded-full transition-colors duration-300 ${
-                dot <= step ? 'bg-primary' : 'bg-muted'
-              }`}
-            />
-          ))}
-        </div>
-
-        {/* ── Step content ── */}
-        <div className="relative overflow-hidden" style={{ minHeight: 340 }}>
-          <AnimatePresence mode="wait" initial={false}>
-            {step === 1 && (
-              <Step1
-                key="s1"
-                config={config}
-                updateConfig={updateConfig}
-                catOpen={catRef}
-                goalOpen={goalRef}
-              />
-            )}
-            {step === 2 && (
-              <Step2 key="s2" config={config} updateConfig={updateConfig} />
-            )}
-            {step === 3 && (
-              <Step3 key="s3" config={config} updateConfig={updateConfig} />
-            )}
-            {step === 4 && (
-              <Step4 key="s4" config={config} updateConfig={updateConfig} />
-            )}
-            {step === 5 && (
-              <Step5 key="s5" config={config} updateConfig={updateConfig} />
-            )}
-            {step === 6 && (
-              <Step6 key="s6" config={config} />
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* ── Footer ── */}
-        <div className="flex items-center justify-between pt-2">
-          <Button
-            variant="outline"
-            onClick={step === 1 ? () => handleOpenChange(false) : handleBack}
-            disabled={step === 1 && false}
-            className="gap-2"
-          >
-            <ChevronLeft className="size-4" />
-            {step === 1 ? 'Cancel' : 'Back'}
-          </Button>
-
-          {step < TOTAL_STEPS ? (
-            <Button
-              onClick={handleNext}
-              disabled={!canProceed[step]}
-              className="gap-2"
-            >
-              Continue
-              <ChevronRight className="size-4" />
-            </Button>
-          ) : (
-            <Button
-              onClick={onSubmit}
-              disabled={!canProceed[6]}
-              className="gap-2"
-            >
-              <Sparkles className="size-4" />
-              {isPending ? 'Generating...' : 'Generate Website'}
-            </Button>
-          )}
-        </div>
+        {wizardContent}
       </DialogContent>
     </Dialog>
   )

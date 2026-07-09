@@ -22,7 +22,13 @@ import {
   PanelRight,
 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
-import { useProjects, type ProjectType, parseProjectData } from '@/hooks/useProjects'
+import {
+  useProjects,
+  useCreateGenerationJob,
+  type ProjectType,
+  type CreateGenerationJobInput,
+  parseProjectData,
+} from '@/hooks/useProjects'
 import {
   WorkspaceSidebar,
   type WorkspaceView,
@@ -30,6 +36,13 @@ import {
 } from '@/components/dashboard/WorkspaceSidebar'
 import { PropertiesPanel } from '@/components/dashboard/PropertiesPanel'
 import { GenerateConfirmDialog } from '@/components/dashboard/GenerateConfirmDialog'
+import { WebsiteGenerationWizard } from '@/components/dashboard/WebsiteGenerationWizard'
+import { GenerationStatusView } from '@/components/dashboard/GenerationStatusView'
+import {
+  createDefaultConfig,
+  type GenerationConfig,
+  type WizardStep,
+} from '@/lib/generation-types'
 
 /* ─────────────────────────────────────────────
    Constants
@@ -69,26 +82,30 @@ const GEN_CARDS = [
     label: 'Website',
     icon: Globe,
     desc: 'Generate landing page and website structure.',
+    isWizard: true,
   },
   {
     id: 'blueprint',
     label: 'Blueprint',
     icon: FileText,
     desc: 'Generate architecture and product planning.',
+    isWizard: false,
   },
   {
     id: 'database',
     label: 'Database',
     icon: Database,
     desc: 'Generate database schema.',
+    isWizard: false,
   },
   {
     id: 'deployment',
     label: 'Deployment',
     icon: Rocket,
     desc: 'Prepare deployment configuration.',
+    isWizard: false,
   },
-]
+] as const
 
 const LOADING_MESSAGES = [
   'Understanding your project...',
@@ -98,6 +115,7 @@ const LOADING_MESSAGES = [
 ]
 
 type GenState = 'idle' | 'confirming' | 'loading'
+type ViewState = 'workspace' | 'wizard' | 'status'
 
 /* ─────────────────────────────────────────────
    Helpers
@@ -128,6 +146,7 @@ function ProjectDetailPage() {
   const { user } = useAuth()
   const { data: projects = [], isLoading } = useProjects(user?.id)
   const { id } = useParams({ from: '/app/projects/$id' })
+  const createGenJob = useCreateGenerationJob()
 
   const project = useMemo(
     () => projects.find((p) => p.id === id),
@@ -142,6 +161,13 @@ function ProjectDetailPage() {
   const [statusIndex, setStatusIndex] = useState(0)
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false)
 
+  /* ── Wizard state ── */
+  const [viewState, setViewState] = useState<ViewState>('workspace')
+  const [wizardOpen, setWizardOpen] = useState(false)
+  const [wizardConfig, setWizardConfig] = useState<GenerationConfig>(createDefaultConfig)
+  const [wizardStep, setWizardStep] = useState<WizardStep>(1)
+  const [wizardPending, setWizardPending] = useState(false)
+
   const progressRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const messageRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -155,18 +181,32 @@ function ProjectDetailPage() {
     }
   }, [])
 
-  /* ── generation handlers ── */
-  const handleGenClick = useCallback((feature: string) => {
-    setGenFeature(feature)
-    setGenState('confirming')
+  /* ── reset wizard on open ── */
+  const openWizard = useCallback(() => {
+    setWizardConfig(createDefaultConfig())
+    setWizardStep(1)
+    setWizardPending(false)
+    setWizardOpen(true)
   }, [])
 
+  /* ── generation card click handler ── */
+  const handleGenClick = useCallback((feature: string, isWizard: boolean) => {
+    if (isWizard) {
+      // Open the full-screen website generation wizard
+      openWizard()
+      return
+    }
+    // Other cards: show the placeholder confirm dialog
+    setGenFeature(feature)
+    setGenState('confirming')
+  }, [openWizard])
+
+  /* ── confirm dialog (non-wizard generation cards) ── */
   const handleGenConfirm = useCallback(() => {
     setGenState('loading')
     setProgress(0)
     setStatusIndex(0)
 
-    // progress: ~1.5% every 100ms → reaches 100 in ~6.7s
     progressRef.current = setInterval(() => {
       setProgress((prev) => {
         const next = prev + 1.5
@@ -174,18 +214,44 @@ function ProjectDetailPage() {
       })
     }, 100)
 
-    // status messages: rotate every 1.7s
     messageRef.current = setInterval(() => {
       setStatusIndex((prev) => (prev + 1) % LOADING_MESSAGES.length)
     }, 1700)
 
-    // finish after ~7s
     timeoutRef.current = setTimeout(() => {
       if (progressRef.current) clearInterval(progressRef.current)
       if (messageRef.current) clearInterval(messageRef.current)
       setGenState('idle')
       setProgress(100)
     }, 7000)
+  }, [])
+
+  /* ── Wizard submit: save to DB then show status ── */
+  const handleWizardSubmit = useCallback(async () => {
+    if (!user?.id || !project) return
+
+    setWizardPending(true)
+
+    try {
+      const input: CreateGenerationJobInput = {
+        projectId: project.id,
+        userId: user.id,
+        config: wizardConfig,
+      }
+      await createGenJob.mutateAsync(input)
+
+      setWizardOpen(false)
+      setWizardPending(false)
+      // Switch to generation status view
+      setViewState('status')
+    } catch {
+      setWizardPending(false)
+    }
+  }, [user?.id, project, wizardConfig, createGenJob])
+
+  /* ── Status view done → return to workspace ── */
+  const handleStatusDone = useCallback(() => {
+    setViewState('workspace')
   }, [])
 
   /* ── LOADING ── */
@@ -324,7 +390,12 @@ function ProjectDetailPage() {
 
           {/* ── CENTER WORKSPACE AREA ── */}
           <div className="flex-1 overflow-y-auto p-4">
-            {genState === 'loading' ? (
+            {viewState === 'status' ? (
+              <GenerationStatusView
+                projectId={project.id}
+                onDone={handleStatusDone}
+              />
+            ) : genState === 'loading' ? (
               <LoadingWorkspace progress={progress} statusIndex={statusIndex} />
             ) : (
               <EmptyWorkspace onGenerate={handleGenClick} />
@@ -354,7 +425,7 @@ function ProjectDetailPage() {
         <PropertiesPanel project={project} projectData={projectData} />
       </Dialog>
 
-      {/* ── Generation confirm dialog ── */}
+      {/* ── Generation confirm dialog (non-wizard cards) ── */}
       <GenerateConfirmDialog
         open={genState === 'confirming'}
         onOpenChange={(open) => {
@@ -362,6 +433,19 @@ function ProjectDetailPage() {
         }}
         onConfirm={handleGenConfirm}
         featureLabel={genFeature}
+      />
+
+      {/* ── Full-screen Website Generation Wizard ── */}
+      <WebsiteGenerationWizard
+        open={wizardOpen}
+        onOpenChange={setWizardOpen}
+        config={wizardConfig}
+        setConfig={setWizardConfig}
+        step={wizardStep}
+        setStep={setWizardStep}
+        onSubmit={handleWizardSubmit}
+        isPending={wizardPending}
+        variant="fullscreen"
       />
     </>
   )
@@ -374,7 +458,7 @@ function ProjectDetailPage() {
 function EmptyWorkspace({
   onGenerate,
 }: {
-  onGenerate: (feature: string) => void
+  onGenerate: (feature: string, isWizard: boolean) => void
 }) {
   return (
     <div className="flex flex-col items-center">
@@ -423,7 +507,7 @@ function EmptyWorkspace({
                 variant="outline"
                 size="sm"
                 className="gap-2"
-                onClick={() => onGenerate(card.label)}
+                onClick={() => onGenerate(card.label, card.isWizard)}
               >
                 <Sparkles className="size-3.5" />
                 Generate
