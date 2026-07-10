@@ -21,11 +21,12 @@ export function Footer() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-10">
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
-            <div className="flex items-center gap-2 font-semibold text-lg tracking-tight text-foreground mb-3">
-              <span className="relative flex size-7 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-accent text-primary-foreground text-sm font-bold">
-                G
-              </span>
-              GrowthFlow
+            <div className="mb-3">
+              <img
+                src="/logo.png"
+                alt="GrowthFlow AI"
+                className="h-6 w-auto object-contain"
+              />
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">
               Build, launch, and grow your startup with AI — all in one platform.

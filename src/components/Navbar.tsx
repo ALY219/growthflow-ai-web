@@ -32,11 +32,12 @@ export function Navbar() {
     >
       <div className="mx-auto max-w-7xl flex items-center justify-between px-6 h-16">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2 font-semibold text-lg tracking-tight text-foreground">
-          <span className="relative flex size-7 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-accent text-primary-foreground text-sm font-bold">
-            G
-          </span>
-          GrowthFlow
+        <Link to="/" className="flex items-center">
+          <img
+            src="/logo.png"
+            alt="GrowthFlow AI"
+            className="h-7 w-auto object-contain"
+          />
         </Link>
 
         {/* Desktop links */}
@@ -53,12 +54,15 @@ export function Navbar() {
         </div>
 
         {/* Desktop CTA */}
-        <div className="hidden md:block">
+        <div className="hidden md:flex items-center gap-3">
+          <Link to="/sign-in">
+            <Button variant="ghost" size="sm">Sign In</Button>
+          </Link>
           <Link to="/sign-up">
             <Button size="sm">Get Started</Button>
           </Link>
         </div>
-
+        
         {/* Mobile toggle */}
         <button
           className="md:hidden p-1.5 rounded-md text-muted-foreground hover:text-foreground transition-colors"

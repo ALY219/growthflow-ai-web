@@ -117,12 +117,12 @@ export function DashboardSidebar() {
     <>
       {/* Mobile hamburger */}
       <div className="md:hidden fixed top-0 left-0 right-0 z-40 flex items-center justify-between h-14 px-4 bg-background border-b border-border">
-        <Link to="/" className="flex items-center gap-2 font-semibold text-sm text-foreground">
-          <span className="relative flex size-6 items-center justify-center rounded-md bg-gradient-to-br from-primary to-accent text-primary-foreground text-[10px] font-bold">
-            G
-          </span>
-          <Sparkles className="size-3.5 text-primary" />
-          GrowthFlow
+        <Link to="/" className="flex items-center">
+          <img
+            src="/logo.png"
+            alt="GrowthFlow AI"
+            className="h-5 w-auto object-contain"
+          />
         </Link>
         <button
           className="p-1.5 rounded-md text-muted-foreground hover:text-foreground transition-colors"
