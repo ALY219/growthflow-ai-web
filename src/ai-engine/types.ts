@@ -1,433 +1,343 @@
-/* ──────────────────────────────────────────────────────────────
+/* ───────────────────────────────────────────────────────────────
    AI Engine — Shared Types, Enums & Interfaces
-   GrowthFlow AI · Multi-provider architecture foundation.
+   ─────────────────────────────────────────────────────────────── */
 
-   NEVER depends on a single LLM. Every provider plugs in here.
-   ────────────────────────────────────────────────────────────── */
+// ── AI Provider Identity ──
+export type AIProviderId = 'gemini' | 'openai' | 'claude' | 'deepseek' | 'grok' | 'custom'
 
-// ─── Generation Output Types ───
-export type GenerationOutputType = 'website' | 'blueprint' | 'database' | 'api' | 'deployment'
+export const AI_PROVIDER_LABELS: Record<AIProviderId, string> = {
+  gemini: 'Google Gemini',
+  openai: 'OpenAI',
+  claude: 'Anthropic Claude',
+  deepseek: 'DeepSeek',
+  grok: 'Grok',
+  custom: 'Custom Provider',
+}
 
-// ─── Generation Status ───
+export interface AIProviderMeta {
+  id: AIProviderId
+  label: string
+  models: string[]
+  supportsStreaming: boolean
+  supportsVision: boolean
+}
+
+// ── Generation Lifecycle ──
 export type GenerationStatus =
+  | 'pending'
   | 'queued'
   | 'running'
   | 'completed'
   | 'failed'
   | 'cancelled'
-  | 'retrying'
 
-// ─── Generation Event (for streaming / progress) ───
-export interface GenerationEvent {
-  id: string
-  jobId: string
-  type: 'status' | 'progress' | 'chunk' | 'error' | 'done'
+export const GENERATION_STATUS_LABELS: Record<GenerationStatus, string> = {
+  pending: 'Pending',
+  queued: 'Queued',
+  running: 'Running',
+  completed: 'Completed',
+  failed: 'Failed',
+  cancelled: 'Cancelled',
+}
+
+export const terminalStatuses: Set<GenerationStatus> = new Set([
+  'completed',
+  'failed',
+  'cancelled',
+])
+
+export const activeStatuses: Set<GenerationStatus> = new Set([
+  'pending',
+  'queued',
+  'running',
+])
+
+export function isTerminalStatus(s: GenerationStatus): boolean {
+  return terminalStatuses.has(s)
+}
+
+export function isActiveStatus(s: GenerationStatus): boolean {
+  return activeStatuses.has(s)
+}
+
+// ── Generation Output Types ──
+export type GenerationOutputType =
+  | 'website'
+  | 'blueprint'
+  | 'database'
+  | 'api'
+  | 'deployment'
+
+export const GENERATION_OUTPUT_LABELS: Record<GenerationOutputType, string> = {
+  website: 'Website',
+  blueprint: 'Blueprint',
+  database: 'Database',
+  api: 'API',
+  deployment: 'Deployment',
+}
+
+// ── Generation Error ──
+export interface GenerationError {
+  code: GenerationErrorCode
   message: string
-  progress?: number // 0-100
+  details?: Record<string, unknown>
   timestamp: string
 }
 
-// ─── Prompt Version ───
-export interface PromptVersion {
+export type GenerationErrorCode =
+  | 'VALIDATION_FAILED'
+  | 'PROVIDER_UNAVAILABLE'
+  | 'PROVIDER_TIMEOUT'
+  | 'PROVIDER_RATE_LIMITED'
+  | 'PROVIDER_AUTH_FAILED'
+  | 'PROVIDER_INTERNAL_ERROR'
+  | 'RESPONSE_PARSE_FAILED'
+  | 'OUTPUT_STORAGE_FAILED'
+  | 'CANCELLED_BY_USER'
+  | 'UNKNOWN_ERROR'
+
+export const GENERATION_ERROR_LABELS: Record<GenerationErrorCode, string> = {
+  VALIDATION_FAILED: 'Validation failed',
+  PROVIDER_UNAVAILABLE: 'AI provider unavailable',
+  PROVIDER_TIMEOUT: 'AI provider timeout',
+  PROVIDER_RATE_LIMITED: 'Rate limited by provider',
+  PROVIDER_AUTH_FAILED: 'Provider authentication failed',
+  PROVIDER_INTERNAL_ERROR: 'Provider internal error',
+  RESPONSE_PARSE_FAILED: 'Failed to parse AI response',
+  OUTPUT_STORAGE_FAILED: 'Failed to save generation output',
+  CANCELLED_BY_USER: 'Cancelled by user',
+  UNKNOWN_ERROR: 'Unknown error',
+}
+
+// ── Generation Job ──
+export interface GenerationJob {
   id: string
-  name: string
-  template: string // template string with {{placeholders}}
-  version: number
-  createdAt: string
+  projectId: string
+  userId: string
+  /** Which output type we are generating */
   outputType: GenerationOutputType
-  variables: PromptVariable[]
-}
-
-export interface PromptVariable {
-  key: string
-  label: string
-  type: 'string' | 'string[]' | 'object'
-  required: boolean
-  description?: string
-}
-
-// ─── AI Provider Interface ───
-export type ProviderId = 'gemini' | 'openai' | 'claude' | 'deepseek' | 'grok' | 'custom'
-
-export interface ProviderConfig {
-  id: ProviderId
-  name: string
-  enabled: boolean
-  apiKey: string
-  baseUrl?: string
+  /** AI provider being used */
+  provider: AIProviderId
+  /** Provider model identifier */
   model: string
-  maxTokens: number
-  temperature: number
-  topP: number
-  timeoutMs: number
+  /** Current lifecycle status */
+  status: GenerationStatus
+  /** Normalized 0-100 progress */
+  progress: number
+  /** Current status message (e.g. "Optimizing layout…") */
+  statusMessage: string
+  /** ISO timestamp when the job entered its current status */
+  statusChangedAt: string
+  /** The validated prompt payload that was sent */
+  promptSnapshot: Record<string, unknown>
+  /** Version of the prompt template used */
+  promptVersion: string
+  /** Executed generation config ID */
+  configId: string
+  /** Number of retry attempts so far */
+  retryCount: number
+  /** Max retries allowed */
   maxRetries: number
-  headers?: Record<string, string>
+  /** Error object if failed */
+  error: GenerationError | null
+  /** ISO timestamp */
+  createdAt: string
+  /** ISO timestamp */
+  updatedAt: string
+  /** ISO timestamp of when execution started */
+  startedAt: string | null
+  /** ISO timestamp of when execution completed */
+  completedAt: string | null
+  /** Duration in ms */
+  executionDurationMs: number | null
 }
 
-// ─── AI Prompt Payload ───
-export interface AIPromptPayload {
-  /** The system-level instruction for the model */
-  system: string
-  /** The user-level prompt with compiled variables */
-  user: string
-  /** Optional conversation context / history */
-  context?: AIConversationTurn[]
-  /** Generation parameters */
-  params: AIGenerationParams
-  /** Metadata for tracing */
-  metadata: PromptMetadata
-}
-
-export interface AIConversationTurn {
-  role: 'user' | 'assistant'
-  content: string
-}
-
-export interface AIGenerationParams {
-  model: string
-  maxTokens: number
-  temperature: number
-  topP: number
-  responseFormat?: 'text' | 'json'
-}
-
-export interface PromptMetadata {
-  promptVersionId: string
-  promptVersion: number
+// ── Generation Output ──
+export interface GenerationOutput {
+  id: string
+  jobId: string
+  projectId: string
+  userId: string
   outputType: GenerationOutputType
+  provider: AIProviderId
+  /** The structured output payload (depends on outputType) */
+  data: Record<string, unknown>
+  /** Raw provider response for debugging */
+  rawResponse: string | null
+  /** Token usage if reported by provider */
+  tokenUsage: TokenUsage | null
   createdAt: string
 }
 
-// ─── AI Provider Response ───
-export interface AIProviderResponse {
-  /** Raw text output from the provider */
-  raw: string
-  /** Token usage breakdown */
-  usage: AIUsage
-  /** How long the provider took (ms) */
-  latencyMs: number
-  /** Provider-specific metadata */
-  providerMeta?: Record<string, unknown>
-}
-
-export interface AIUsage {
+export interface TokenUsage {
   promptTokens: number
   completionTokens: number
   totalTokens: number
 }
 
-// ─── Generation Output Models ───
-// Every provider maps its raw response into one of these models.
-
-export interface WebsiteOutput {
-  type: 'website'
-  title: string
-  description: string
-  pages: WebsitePage[]
-  styles: WebsiteStyles
-  seo: SEOMetadata
-  assets: AssetReference[]
-}
-
-export interface WebsitePage {
-  id: string
-  slug: string
-  title: string
-  sections: PageSection[]
-}
-
-export interface PageSection {
-  type: string // e.g. 'hero', 'features', 'cta'
-  content: string // HTML / markdown
-  order: number
-}
-
-export interface WebsiteStyles {
-  colorPalette: Record<string, string>
-  fonts: { heading: string; body: string }
-  radius: string
-  spacing: string
-}
-
-export interface SEOMetadata {
-  title: string
-  description: string
-  keywords: string[]
-  ogImage?: string
-}
-
-export interface AssetReference {
-  type: 'image' | 'icon' | 'font'
-  url: string
-  alt?: string
-}
-
-export interface BlueprintOutput {
-  type: 'blueprint'
-  productName: string
-  overview: string
-  architecture: ArchitectureDiagram
-  features: BlueprintFeature[]
-  techStack: TechStackRecommendation
-  roadmap: Milestone[]
-  constraints: string[]
-}
-
-export interface ArchitectureDiagram {
-  type: 'monolith' | 'microservices' | 'serverless' | 'hybrid'
-  description: string
-  components: ArchitectureComponent[]
-}
-
-export interface ArchitectureComponent {
-  name: string
-  type: 'frontend' | 'backend' | 'database' | 'cache' | 'queue' | 'storage' | 'cdn' | 'api-gateway'
-  description: string
-  dependencies: string[]
-}
-
-export interface BlueprintFeature {
-  id: string
-  name: string
-  description: string
-  priority: 'P0' | 'P1' | 'P2' | 'P3'
-  effort: 'S' | 'M' | 'L' | 'XL'
-  dependencies: string[]
-}
-
-export interface TechStackRecommendation {
-  frontend: TechOption[]
-  backend: TechOption[]
-  database: TechOption[]
-  infrastructure: TechOption[]
-  rationale: string
-}
-
-export interface TechOption {
-  name: string
-  description: string
-  pros: string[]
-  cons: string[]
-  recommended: boolean
-}
-
-export interface Milestone {
-  phase: string
-  title: string
-  description: string
-  estimate: string
-  deliverables: string[]
-}
-
-export interface DatabaseOutput {
-  type: 'database'
-  tables: DBTable[]
-  relationships: DBRelationship[]
-  indexes: DBIndex[]
-  migrations: DBMigration[]
-}
-
-export interface DBTable {
-  name: string
-  description: string
-  columns: DBColumn[]
-}
-
-export interface DBColumn {
-  name: string
-  type: string
-  nullable: boolean
-  primaryKey: boolean
-  unique: boolean
-  defaultValue?: string
-  references?: { table: string; column: string }
-}
-
-export interface DBRelationship {
-  from: { table: string; column: string }
-  to: { table: string; column: string }
-  type: 'one-to-one' | 'one-to-many' | 'many-to-many'
-}
-
-export interface DBIndex {
-  table: string
-  columns: string[]
-  unique: boolean
-}
-
-export interface DBMigration {
-  version: number
-  description: string
-  sql: string
-}
-
-export interface APIOutput {
-  type: 'api'
-  title: string
-  description: string
-  baseUrl: string
-  version: string
-  endpoints: APIEndpoint[]
-  auth: APIAuthConfig
-  schemas: APISchema[]
-}
-
-export interface APIEndpoint {
-  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
-  path: string
-  description: string
-  auth: boolean
-  request?: APISchema
-  response?: APISchema
-}
-
-export interface APIAuthConfig {
-  type: 'bearer' | 'api-key' | 'oauth2' | 'session' | 'none'
-  description: string
-}
-
-export interface APISchema {
-  type: 'object' | 'array'
-  properties?: Record<string, APISchemaProperty>
-  items?: APISchema
-  required?: string[]
-}
-
-export interface APISchemaProperty {
-  type: string
-  description?: string
-  format?: string
-  nullable?: boolean
-  enum?: string[]
-}
-
-export interface DeploymentOutput {
-  type: 'deployment'
-  provider: string
-  configuration: DeploymentConfig
-  ciCdi: CICDIPipeline
-  environmentVariables: EnvironmentVariable[]
-  scaling: ScalingConfig
-  monitoring: MonitoringConfig
-}
-
-export interface DeploymentConfig {
-  region: string
-  compute: string
-  memory: string
-  storage: string
-  domains: string[]
-}
-
-export interface CICDIPipeline {
-  provider: string
-  buildCommand: string
-  testCommand: string
-  deployCommand: string
-  branches: { name: string; environment: string }[]
-}
-
-export interface EnvironmentVariable {
-  key: string
-  description: string
-  secret: boolean
-  defaultValue?: string
-}
-
-export interface ScalingConfig {
-  minInstances: number
-  maxInstances: number
-  targetCPU: number
-  autoScale: boolean
-}
-
-export interface MonitoringConfig {
-  provider: string
-  metrics: string[]
-  alerts: MonitoringAlert[]
-}
-
-export interface MonitoringAlert {
-  name: string
-  condition: string
-  severity: 'low' | 'medium' | 'high' | 'critical'
-  channel: 'email' | 'slack' | 'webhook'
-}
-
-// ─── Generation Job ───
-export interface GenerationJob {
-  id: string
-  projectId: string
-  userId: string
-  type: GenerationOutputType
+// ── Generation Metadata ──
+export interface GenerationMetadata {
+  jobId: string
+  provider: AIProviderId
+  model: string
+  outputType: GenerationOutputType
   status: GenerationStatus
-  provider: ProviderId
-  promptPayload: AIPromptPayload | null
-  response: AIProviderResponse | null
-  output: GenerationOutput | null
-  error: string | null
-  executionTimeMs: number | null
-  attempts: number
-  maxAttempts: number
-  events: GenerationEvent[]
-  promptVersionId: string | null
-  promptVersion: number | null
+  promptVersion: string
+  executionDurationMs: number | null
+  retryCount: number
+  error: GenerationError | null
   createdAt: string
-  updatedAt: string
-  startedAt: string | null
-  completedAt: string | null
 }
 
-export type GenerationOutput =
-  | WebsiteOutput
-  | BlueprintOutput
-  | DatabaseOutput
-  | APIOutput
-  | DeploymentOutput
-
-// ─── Generation Queue Item ───
-export interface GenerationQueueItem {
+// ── History Entry ──
+export interface HistoryEntry {
+  id: string
   jobId: string
   projectId: string
   userId: string
-  type: GenerationOutputType
-  priority: number
-  createdAt: string
+  outputType: GenerationOutputType
+  provider: AIProviderId
+  model: string
+  /** Snapshot of status at this point in time */
+  status: GenerationStatus
+  message: string
+  metadata: GenerationMetadata
+  timestamp: string
 }
 
-// ─── Validation ───
+// ── Prompt Payload ──
+export interface PromptPayload {
+  /** System-level instruction */
+  system: string
+  /** User-facing prompt */
+  user: string
+  /** Structured context (config, project data) */
+  context: Record<string, unknown>
+  /** Output schema/format instruction */
+  outputFormat: string
+  /** Examples for few-shot prompting */
+  examples?: PromptExample[]
+  /** Extra provider-specific params */
+  options: PromptOptions
+}
+
+export interface PromptExample {
+  input: string
+  output: string
+}
+
+export interface PromptOptions {
+  temperature?: number
+  maxTokens?: number
+  topP?: number
+  frequencyPenalty?: number
+  presencePenalty?: number
+  stopSequences?: string[]
+}
+
+// ── Validation ──
+export interface ValidationError {
+  field: string
+  message: string
+  code: string
+}
+
 export interface ValidationResult {
   valid: boolean
   errors: ValidationError[]
 }
 
-export interface ValidationError {
-  field: string
-  message: string
-  severity: 'error' | 'warning'
-}
-
-// ─── History ───
-export interface GenerationHistoryEntry {
-  id: string
-  jobId: string
-  projectId: string
-  userId: string
-  type: GenerationOutputType
-  status: GenerationStatus
-  provider: ProviderId
-  promptVersionId: string | null
-  executionTimeMs: number | null
-  attemptNumber: number
-  createdAt: string
-}
-
-// ─── Provider Registration ───
-export interface ProviderRegistration {
-  id: ProviderId
-  name: string
-  description: string
-  models: string[]
+// ── Provider Interface (abstract) ──
+export interface AIProviderConfig {
+  id: AIProviderId
+  apiKey: string
+  baseUrl?: string
   defaultModel: string
-  enabled: boolean
+  models: string[]
+}
+
+export interface GenerationRequest {
+  prompt: PromptPayload
+  model: string
+  signal?: AbortSignal
+}
+
+export interface GenerationResponse {
+  text: string
+  tokenUsage: TokenUsage | null
+  model: string
+  finishReason: string
+}
+
+export interface StreamingGenerationResponse {
+  /** Async iterator-like interface for token-by-token streaming */
+  [Symbol.asyncIterator](): AsyncIterator<string>
+  /** Abort the stream */
+  abort(): void
+}
+
+export interface AIProvider {
+  readonly id: AIProviderId
+  readonly config: AIProviderConfig
+
+  /** Generate a complete response */
+  generate(request: GenerationRequest): Promise<GenerationResponse>
+  /** Stream a response token-by-token */
+  stream(request: GenerationRequest): Promise<StreamingGenerationResponse>
+  /** Health check */
+  healthCheck(): Promise<boolean>
+}
+
+// ── Provider Registry ──
+export interface ProviderRegistration {
+  provider: AIProvider
+  registeredAt: string
+  isDefault: boolean
+}
+
+// ── Generation Queue ──
+export interface QueueItem {
+  job: GenerationJob
+  priority: number
+  enqueuedAt: string
+}
+
+// ── Generation Config (for prompt builder input) ──
+export interface AIGenerationConfig {
+  projectId: string
+  outputType: GenerationOutputType
+  provider: AIProviderId
+  model?: string
+  maxRetries?: number
+  promptOptions?: PromptOptions
+}
+
+// ── Event Types (for reactive subscribers) ──
+export type GenerationEvent =
+  | { type: 'STATUS_CHANGED'; jobId: string; status: GenerationStatus; previousStatus: GenerationStatus }
+  | { type: 'PROGRESS'; jobId: string; progress: number; message: string }
+  | { type: 'ERROR'; jobId: string; error: GenerationError }
+  | { type: 'COMPLETED'; jobId: string; output: GenerationOutput }
+  | { type: 'CANCELLED'; jobId: string }
+  | { type: 'STREAMING_TOKEN'; jobId: string; token: string }
+  | { type: 'STREAMING_DONE'; jobId: string }
+
+export type GenerationEventHandler = (event: GenerationEvent) => void
+
+// ── Developer Panel ──
+export interface DebugLogEntry {
+  id: string
+  timestamp: string
+  level: 'info' | 'warn' | 'error' | 'debug'
+  jobId?: string
+  provider?: AIProviderId
+  message: string
+  data?: Record<string, unknown>
+}
+
+export interface DeveloperPanelState {
+  isOpen: boolean
+  activeJobId: string | null
+  logs: DebugLogEntry[]
+  selectedProvider: AIProviderId | null
 }
