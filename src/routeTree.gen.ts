@@ -24,7 +24,6 @@ import { Route as AppTemplatesRouteImport } from './routes/app/templates'
 import { Route as AppSettingsRouteImport } from './routes/app/settings'
 import { Route as AppProjectsRouteImport } from './routes/app/projects'
 import { Route as AppProjectsIdRouteImport } from './routes/app/projects.$id'
-import { Route as AppProjectsIdGenerationRouteImport } from './routes/app/projects.$id.generation'
 
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
@@ -101,11 +100,6 @@ const AppProjectsIdRoute = AppProjectsIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => AppProjectsRoute,
 } as any)
-const AppProjectsIdGenerationRoute = AppProjectsIdGenerationRouteImport.update({
-  id: '/generation',
-  path: '/generation',
-  getParentRoute: () => AppProjectsIdRoute,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -122,8 +116,7 @@ export interface FileRoutesByFullPath {
   '/app/settings': typeof AppSettingsRoute
   '/app/templates': typeof AppTemplatesRoute
   '/app/': typeof AppIndexRoute
-  '/app/projects/$id': typeof AppProjectsIdRouteWithChildren
-  '/app/projects/$id/generation': typeof AppProjectsIdGenerationRoute
+  '/app/projects/$id': typeof AppProjectsIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -139,8 +132,7 @@ export interface FileRoutesByTo {
   '/app/settings': typeof AppSettingsRoute
   '/app/templates': typeof AppTemplatesRoute
   '/app': typeof AppIndexRoute
-  '/app/projects/$id': typeof AppProjectsIdRouteWithChildren
-  '/app/projects/$id/generation': typeof AppProjectsIdGenerationRoute
+  '/app/projects/$id': typeof AppProjectsIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -158,8 +150,7 @@ export interface FileRoutesById {
   '/app/settings': typeof AppSettingsRoute
   '/app/templates': typeof AppTemplatesRoute
   '/app/': typeof AppIndexRoute
-  '/app/projects/$id': typeof AppProjectsIdRouteWithChildren
-  '/app/projects/$id/generation': typeof AppProjectsIdGenerationRoute
+  '/app/projects/$id': typeof AppProjectsIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -179,7 +170,6 @@ export interface FileRouteTypes {
     | '/app/templates'
     | '/app/'
     | '/app/projects/$id'
-    | '/app/projects/$id/generation'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -196,7 +186,6 @@ export interface FileRouteTypes {
     | '/app/templates'
     | '/app'
     | '/app/projects/$id'
-    | '/app/projects/$id/generation'
   id:
     | '__root__'
     | '/'
@@ -214,7 +203,6 @@ export interface FileRouteTypes {
     | '/app/templates'
     | '/app/'
     | '/app/projects/$id'
-    | '/app/projects/$id/generation'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -337,34 +325,15 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppProjectsIdRouteImport
       parentRoute: typeof AppProjectsRoute
     }
-    '/app/projects/$id/generation': {
-      id: '/app/projects/$id/generation'
-      path: '/generation'
-      fullPath: '/app/projects/$id/generation'
-      preLoaderRoute: typeof AppProjectsIdGenerationRouteImport
-      parentRoute: typeof AppProjectsIdRoute
-    }
   }
 }
 
-interface AppProjectsIdRouteChildren {
-  AppProjectsIdGenerationRoute: typeof AppProjectsIdGenerationRoute
-}
-
-const AppProjectsIdRouteChildren: AppProjectsIdRouteChildren = {
-  AppProjectsIdGenerationRoute: AppProjectsIdGenerationRoute,
-}
-
-const AppProjectsIdRouteWithChildren = AppProjectsIdRoute._addFileChildren(
-  AppProjectsIdRouteChildren,
-)
-
 interface AppProjectsRouteChildren {
-  AppProjectsIdRoute: typeof AppProjectsIdRouteWithChildren
+  AppProjectsIdRoute: typeof AppProjectsIdRoute
 }
 
 const AppProjectsRouteChildren: AppProjectsRouteChildren = {
-  AppProjectsIdRoute: AppProjectsIdRouteWithChildren,
+  AppProjectsIdRoute: AppProjectsIdRoute,
 }
 
 const AppProjectsRouteWithChildren = AppProjectsRoute._addFileChildren(

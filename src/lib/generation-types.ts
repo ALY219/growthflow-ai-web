@@ -1,11 +1,11 @@
 /* ─────────────────────────────────────────────
    Generation Configuration Types
-   Shared types for the Website Generator Wizard.
-   Extensible for future AI integrations (Gemini, OpenAI, Claude, etc.).
+   Shared types for AI website generation wizard.
+   Extensible for future AI integrations.
    ───────────────────────────────────────────── */
 
 // ── Step 1: Business Information ──
-export type Industry =
+export type BusinessCategory =
   | 'technology'
   | 'ecommerce'
   | 'healthcare'
@@ -14,8 +14,6 @@ export type Industry =
   | 'portfolio'
   | 'restaurant'
   | 'agency'
-  | 'fitness'
-  | 'ai'
   | 'other'
 
 export type WebsiteGoal =
@@ -26,101 +24,100 @@ export type WebsiteGoal =
   | 'business-website'
   | 'saas'
 
-// ── Step 2: Target Audience ──
-export type CustomerType = 'b2b' | 'b2c' | 'both'
+// ── Step 2: Brand Identity ──
+export type ThemeMode = 'dark' | 'light' | 'auto'
 
-export type BusinessStage =
-  | 'idea'
-  | 'pre-seed'
-  | 'seed'
-  | 'series-a'
-  | 'growth'
-  | 'established'
-
-export type AgeGroup =
-  | 'under-18'
-  | '18-24'
-  | '25-34'
-  | '35-44'
-  | '45-54'
-  | '55-64'
-  | '65-plus'
-
-// ── Step 3: Website Style ──
-export type DesignStyle =
-  | 'modern'
+export type PreferredStyle =
+  | 'apple'
+  | 'stripe'
+  | 'notion'
+  | 'linear'
+  | 'modern-startup'
   | 'minimal'
-  | 'luxury'
-  | 'corporate'
-  | 'startup'
-  | 'creative'
-  | 'dark'
-  | 'light'
+  | 'bold'
+  | 'elegant'
 
-// ── Step 4: Website Structure ──
-export type StandardPage =
-  | 'home'
-  | 'about'
-  | 'services'
+// ── Step 3: Website Structure ──
+export type WebsiteSection =
+  | 'hero'
+  | 'features'
   | 'pricing'
-  | 'portfolio'
-  | 'blog'
+  | 'testimonials'
+  | 'about'
   | 'faq'
   | 'contact'
-  | 'privacy-policy'
-  | 'terms'
-
-export interface CustomPage {
-  id: string
-  name: string
-}
-
-// ── Step 5: Features ──
-export type WebsiteFeature =
-  | 'contact-form'
+  | 'blog'
   | 'newsletter'
-  | 'booking'
-  | 'testimonials'
-  | 'gallery'
-  | 'analytics'
-  | 'live-chat'
-  | 'authentication'
-  | 'dashboard'
-  | 'cms-ready'
+  | 'footer'
+
+// ── Step 4: Target Audience ──
+export type TargetAudience =
+  | 'students'
+  | 'businesses'
+  | 'developers'
+  | 'creators'
+  | 'startups'
+  | 'enterprise'
+  | 'other'
+
+export type Tone =
+  | 'professional'
+  | 'friendly'
+  | 'luxury'
+  | 'minimal'
+  | 'playful'
+  | 'corporate'
+
+// ── Step 5: Advanced Options ──
+export type AdvancedOption =
+  | 'seo'
+  | 'accessibility'
+  | 'responsive-design'
+  | 'dark-mode'
+  | 'animations'
+  | 'performance'
+  | 'auth-ready'
+  | 'database-ready'
 
 // ── Full Generation Configuration ──
 export interface GenerationConfig {
-  // Step 1 — Business Information
+  // Step 1
   businessName: string
-  tagline: string
   businessDescription: string
-  industry: Industry | ''
-  country: string
+  businessCategory: BusinessCategory | ''
   websiteGoal: WebsiteGoal | ''
 
-  // Step 2 — Target Audience
-  primaryAudience: string
-  customerType: CustomerType | ''
-  businessStage: BusinessStage | ''
-  targetAgeGroup: AgeGroup | ''
-  targetCountries: string
-
-  // Step 3 — Website Style
-  designStyle: DesignStyle | ''
+  // Step 2
+  theme: ThemeMode
   primaryColor: string
-  secondaryColor: string
   accentColor: string
+  preferredStyle: PreferredStyle | ''
 
-  // Step 4 — Website Structure
-  pages: StandardPage[]
-  customPages: CustomPage[]
+  // Step 3
+  sections: WebsiteSection[]
 
-  // Step 5 — Features
-  features: WebsiteFeature[]
+  // Step 4
+  targetAudiences: TargetAudience[]
+  tone: Tone | ''
+
+  // Step 5
+  advancedOptions: AdvancedOption[]
+}
+
+// ── Generation Job (saved to DB) ──
+export interface GenerationJob {
+  id: string
+  projectId: string
+  userId: string
+  config: GenerationConfig
+  status: 'pending' | 'in-progress' | 'completed' | 'failed'
+  generationType: 'website'
+  createdAt: string
+  updatedAt: string
 }
 
 // ── Label maps for display ──
-export const INDUSTRY_LABELS: Record<Industry, string> = {
+export const BUSINESS_CATEGORY_LABELS: Record<BusinessCategory, string> = {
   technology: 'Technology',
   ecommerce: 'Ecommerce',
   healthcare: 'Healthcare',
@@ -129,8 +126,6 @@ export const INDUSTRY_LABELS: Record<Industry, string> = {
   portfolio: 'Portfolio',
   restaurant: 'Restaurant',
   agency: 'Agency',
-  fitness: 'Fitness',
-  ai: 'AI',
   other: 'Other',
 }
 
@@ -143,93 +138,79 @@ export const WEBSITE_GOAL_LABELS: Record<WebsiteGoal, string> = {
   saas: 'SaaS',
 }
 
-export const CUSTOMER_TYPE_LABELS: Record<CustomerType, string> = {
-  b2b: 'B2B',
-  b2c: 'B2C',
-  both: 'Both',
-}
-
-export const BUSINESS_STAGE_LABELS: Record<BusinessStage, string> = {
-  idea: 'Idea',
-  'pre-seed': 'Pre-Seed',
-  seed: 'Seed',
-  'series-a': 'Series A',
-  growth: 'Growth',
-  established: 'Established',
-}
-
-export const AGE_GROUP_LABELS: Record<AgeGroup, string> = {
-  'under-18': 'Under 18',
-  '18-24': '18–24',
-  '25-34': '25–34',
-  '35-44': '35–44',
-  '45-54': '45–54',
-  '55-64': '55–64',
-  '65-plus': '65+',
-}
-
-export const DESIGN_STYLE_LABELS: Record<DesignStyle, string> = {
-  modern: 'Modern',
+export const PREFERRED_STYLE_LABELS: Record<PreferredStyle, string> = {
+  apple: 'Apple',
+  stripe: 'Stripe',
+  notion: 'Notion',
+  linear: 'Linear',
+  'modern-startup': 'Modern Startup',
   minimal: 'Minimal',
-  luxury: 'Luxury',
-  corporate: 'Corporate',
-  startup: 'Startup',
-  creative: 'Creative',
-  dark: 'Dark',
-  light: 'Light',
+  bold: 'Bold',
+  elegant: 'Elegant',
 }
 
-export const STANDARD_PAGE_LABELS: Record<StandardPage, string> = {
-  home: 'Home',
-  about: 'About',
-  services: 'Services',
+export const WEBSITE_SECTION_LABELS: Record<WebsiteSection, string> = {
+  hero: 'Hero',
+  features: 'Features',
   pricing: 'Pricing',
-  portfolio: 'Portfolio',
-  blog: 'Blog',
+  testimonials: 'Testimonials',
+  about: 'About',
   faq: 'FAQ',
   contact: 'Contact',
-  'privacy-policy': 'Privacy Policy',
-  terms: 'Terms',
+  blog: 'Blog',
+  newsletter: 'Newsletter',
+  footer: 'Footer',
 }
 
-export const FEATURE_LABELS: Record<WebsiteFeature, string> = {
-  'contact-form': 'Contact Form',
-  newsletter: 'Newsletter',
-  booking: 'Booking',
-  testimonials: 'Testimonials',
-  gallery: 'Gallery',
-  analytics: 'Analytics',
-  'live-chat': 'Live Chat',
-  authentication: 'Authentication',
-  dashboard: 'Dashboard',
-  'cms-ready': 'CMS Ready',
+export const TARGET_AUDIENCE_LABELS: Record<TargetAudience, string> = {
+  students: 'Students',
+  businesses: 'Businesses',
+  developers: 'Developers',
+  creators: 'Creators',
+  startups: 'Startups',
+  enterprise: 'Enterprise',
+  other: 'Other',
+}
+
+export const TONE_LABELS: Record<Tone, string> = {
+  professional: 'Professional',
+  friendly: 'Friendly',
+  luxury: 'Luxury',
+  minimal: 'Minimal',
+  playful: 'Playful',
+  corporate: 'Corporate',
+}
+
+export const ADVANCED_OPTION_LABELS: Record<AdvancedOption, string> = {
+  seo: 'SEO Optimization',
+  accessibility: 'Accessibility',
+  'responsive-design': 'Responsive Design',
+  'dark-mode': 'Dark Mode',
+  animations: 'Animations',
+  performance: 'Performance Optimization',
+  'auth-ready': 'Authentication Ready',
+  'database-ready': 'Database Ready',
 }
 
 // ── Default config ──
 export function createDefaultConfig(): GenerationConfig {
   return {
     businessName: '',
-    tagline: '',
     businessDescription: '',
-    industry: '',
-    country: '',
+    businessCategory: '',
     websiteGoal: '',
 
-    primaryAudience: '',
-    customerType: '',
-    businessStage: '',
-    targetAgeGroup: '',
-    targetCountries: '',
-
-    designStyle: '',
+    theme: 'dark',
     primaryColor: '#3B82F6',
-    secondaryColor: '#8B5CF6',
-    accentColor: '#EC4899',
+    accentColor: '#8B5CF6',
+    preferredStyle: '',
 
-    pages: [],
-    customPages: [],
+    sections: [],
 
-    features: [],
+    targetAudiences: [],
+    tone: '',
+
+    advancedOptions: [],
   }
 }
 
@@ -238,10 +219,10 @@ export type WizardStep = 1 | 2 | 3 | 4 | 5 | 6 // 6 = review
 
 export const STEP_LABELS: Record<WizardStep, string> = {
   1: 'Business Information',
-  2: 'Target Audience',
-  3: 'Website Style',
-  4: 'Website Structure',
-  5: 'Features',
+  2: 'Brand Identity',
+  3: 'Website Structure',
+  4: 'Target Audience',
+  5: 'Advanced Options',
   6: 'Review',
 }
 
