@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { blink } from '@/blink/client'
+import { supabase } from '@/lib/supabase'
 import type { GenerationConfig } from '@/lib/generation-types'
 
 export interface Project {
@@ -35,7 +35,7 @@ export interface GenerationJob {
   id: string
   projectId: string
   userId: string
-  config: string // JSON string of GenerationConfig
+  config: string
   status: 'pending' | 'in-progress' | 'completed' | 'failed'
   generationType: 'website'
   createdAt: string
@@ -48,19 +48,69 @@ export interface CreateGenerationJobInput {
   config: GenerationConfig
 }
 
-const projectsTable = blink.db.table<Project>('projects')
-const generationJobsTable = blink.db.table<GenerationJob>('generation_jobs')
+// ── Supabase row shapes ──
+interface ProjectRow {
+  id: string
+  user_id: string
+  name: string
+  description: string
+  type: string
+  status: string
+  data: Record<string, unknown>
+  created_at: string
+  updated_at: string
+}
+
+interface GenerationJobRow {
+  id: string
+  project_id: string
+  user_id: string
+  config: Record<string, unknown>
+  status: string
+  generation_type: string
+  created_at: string
+  updated_at: string
+}
+
+function mapProject(row: ProjectRow): Project {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    name: row.name,
+    description: row.description ?? '',
+    type: row.type,
+    status: row.status,
+    data: JSON.stringify(row.data ?? {}),
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }
+}
+
+function mapJob(row: GenerationJobRow): GenerationJob {
+  return {
+    id: row.id,
+    projectId: row.project_id,
+    userId: row.user_id,
+    config: JSON.stringify(row.config ?? {}),
+    status: row.status as GenerationJob['status'],
+    generationType: row.generation_type as GenerationJob['generationType'],
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }
+}
 
 export function useProjects(userId?: string) {
   return useQuery<Project[]>({
     queryKey: ['projects', userId],
     queryFn: async () => {
       if (!userId) return []
-      const result = await projectsTable.list({
-        where: { userId },
-        orderBy: { createdAt: 'desc' },
-      })
-      return result
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+      if (error) throw error
+      return (data as ProjectRow[]).map(mapProject)
     },
     enabled: !!userId,
   })
@@ -71,19 +121,24 @@ export function useCreateProject() {
 
   return useMutation<Project, Error, CreateProjectInput>({
     mutationFn: async (input) => {
-      const project = await projectsTable.create({
-        name: input.name,
-        description: input.description,
-        type: input.type,
-        userId: input.userId,
-        status: 'draft',
-        data: JSON.stringify({
-          industry: input.industry,
-          theme: input.theme,
-          targetAudience: input.targetAudience,
-        }),
-      } as unknown as Project)
-      return project
+      const { data, error } = await supabase
+        .from('projects')
+        .insert({
+          name: input.name,
+          description: input.description,
+          type: input.type,
+          user_id: input.userId,
+          status: 'draft',
+          data: {
+            industry: input.industry,
+            theme: input.theme,
+            targetAudience: input.targetAudience,
+          },
+        })
+        .select()
+        .single()
+      if (error) throw error
+      return mapProject(data as ProjectRow)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] })
@@ -96,14 +151,19 @@ export function useCreateGenerationJob() {
 
   return useMutation<GenerationJob, Error, CreateGenerationJobInput>({
     mutationFn: async (input) => {
-      const job = await generationJobsTable.create({
-        projectId: input.projectId,
-        userId: input.userId,
-        config: JSON.stringify(input.config),
-        status: 'pending',
-        generationType: 'website',
-      } as unknown as GenerationJob)
-      return job
+      const { data, error } = await supabase
+        .from('generation_jobs')
+        .insert({
+          project_id: input.projectId,
+          user_id: input.userId,
+          config: input.config,
+          status: 'pending',
+          generation_type: 'website',
+        })
+        .select()
+        .single()
+      if (error) throw error
+      return mapJob(data as GenerationJobRow)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['generation-jobs'] })

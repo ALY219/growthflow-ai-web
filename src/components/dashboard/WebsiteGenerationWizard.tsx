@@ -1,11 +1,10 @@
-import { useCallback, useRef, type Dispatch, type SetStateAction } from 'react'
+import { useCallback, useRef, useState, useEffect, type Dispatch, type SetStateAction } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Button,
   Input,
   Dialog,
   DialogContent,
-  toast,
 } from '@blinkdotnew/ui'
 import {
   Sparkles,
@@ -20,7 +19,6 @@ import {
   Banknote,
   Briefcase,
   UtensilsCrossed,
-  Building2,
   Ellipsis,
   ShoppingCart,
   TrendingUp,
@@ -30,28 +28,18 @@ import {
   Cloud,
   Moon,
   Sun,
-  SunMoon,
-  PaintBucket,
   Palette,
   Layers,
   Star,
   Zap,
   Eye,
   Minus,
-  MousePointerClick,
-  BookOpen,
-  HelpCircle,
-  MessageCircle,
-  Pen,
-  Mail,
-  Footprints,
-  Users,
-  Code,
-  Lightbulb,
   Rocket,
-  UserCheck,
-  Smile,
   Gem,
+  Building2,
+  Users,
+  Handshake,
+  Lightbulb,
   Gamepad2,
   BriefcaseBusiness,
   Search,
@@ -61,27 +49,44 @@ import {
   Gauge,
   Lock,
   Database,
+  Mail,
+  CalendarCheck,
+  MessageSquare,
+  LayoutDashboard,
+  Image as ImageIcon,
+  Plus,
+  X,
+  Home,
+  BookOpen,
+  HelpCircle,
+  Phone,
+  ScrollText,
+  Scale,
+  Pen,
+  Loader2,
 } from 'lucide-react'
 import type {
   GenerationConfig,
   WizardStep,
-  BusinessCategory,
+  Industry,
   WebsiteGoal,
-  ThemeMode,
-  PreferredStyle,
-  WebsiteSection,
-  TargetAudience,
-  Tone,
-  AdvancedOption,
+  CustomerType,
+  BusinessStage,
+  AgeGroup,
+  DesignStyle,
+  StandardPage,
+  WebsiteFeature,
+  CustomPage,
 } from '@/lib/generation-types'
 import {
-  BUSINESS_CATEGORY_LABELS,
+  INDUSTRY_LABELS,
   WEBSITE_GOAL_LABELS,
-  PREFERRED_STYLE_LABELS,
-  WEBSITE_SECTION_LABELS,
-  TARGET_AUDIENCE_LABELS,
-  TONE_LABELS,
-  ADVANCED_OPTION_LABELS,
+  CUSTOMER_TYPE_LABELS,
+  BUSINESS_STAGE_LABELS,
+  AGE_GROUP_LABELS,
+  DESIGN_STYLE_LABELS,
+  STANDARD_PAGE_LABELS,
+  FEATURE_LABELS,
   STEP_LABELS,
   TOTAL_STEPS,
 } from '@/lib/generation-types'
@@ -90,13 +95,14 @@ import {
    Constants
    ───────────────────────────────────────────── */
 
-const BUSINESS_CATEGORIES: BusinessCategory[] = [
+const INDUSTRIES: Industry[] = [
   'technology', 'ecommerce', 'healthcare', 'education',
-  'finance', 'portfolio', 'restaurant', 'agency', 'other',
+  'finance', 'portfolio', 'restaurant', 'agency',
+  'fitness', 'ai', 'other',
 ]
 
-const CATEGORY_ICONS: Record<BusinessCategory, typeof Globe> = {
-  technology: Code,
+const INDUSTRY_ICONS: Record<Industry, typeof Globe> = {
+  technology: Globe,
   ecommerce: Store,
   healthcare: HeartPulse,
   education: GraduationCap,
@@ -104,6 +110,8 @@ const CATEGORY_ICONS: Record<BusinessCategory, typeof Globe> = {
   portfolio: Briefcase,
   restaurant: UtensilsCrossed,
   agency: Building2,
+  fitness: Zap,
+  ai: Sparkles,
   other: Ellipsis,
 }
 
@@ -121,64 +129,45 @@ const GOAL_ICONS: Record<WebsiteGoal, typeof Globe> = {
   saas: Cloud,
 }
 
-const THEME_OPTIONS: { value: ThemeMode; label: string; icon: typeof Moon }[] = [
-  { value: 'dark', label: 'Dark', icon: Moon },
-  { value: 'light', label: 'Light', icon: Sun },
-  { value: 'auto', label: 'Auto', icon: SunMoon },
+const CUSTOMER_TYPES: CustomerType[] = ['b2b', 'b2c', 'both']
+const BUSINESS_STAGES: BusinessStage[] = ['idea', 'pre-seed', 'seed', 'series-a', 'growth', 'established']
+const AGE_GROUPS: AgeGroup[] = ['under-18', '18-24', '25-34', '35-44', '45-54', '55-64', '65-plus']
+
+const DESIGN_STYLES: { value: DesignStyle; icon: typeof Globe; preview: string }[] = [
+  { value: 'modern', icon: Zap, preview: 'bg-gradient-to-br from-blue-500/20 to-cyan-500/20' },
+  { value: 'minimal', icon: Minus, preview: 'bg-gradient-to-br from-gray-500/10 to-gray-400/10' },
+  { value: 'luxury', icon: Gem, preview: 'bg-gradient-to-br from-amber-500/20 to-yellow-500/20' },
+  { value: 'corporate', icon: Building2, preview: 'bg-gradient-to-br from-slate-500/20 to-blue-500/20' },
+  { value: 'startup', icon: Rocket, preview: 'bg-gradient-to-br from-emerald-500/20 to-teal-500/20' },
+  { value: 'creative', icon: Palette, preview: 'bg-gradient-to-br from-pink-500/20 to-purple-500/20' },
+  { value: 'dark', icon: Moon, preview: 'bg-gradient-to-br from-gray-800/40 to-gray-900/40' },
+  { value: 'light', icon: Sun, preview: 'bg-gradient-to-br from-amber-200/20 to-orange-200/20' },
 ]
 
-const STYLE_OPTIONS: { value: PreferredStyle; icon: typeof Star }[] = [
-  { value: 'apple', icon: Star },
-  { value: 'stripe', icon: Layers },
-  { value: 'notion', icon: FileText },
-  { value: 'linear', icon: Zap },
-  { value: 'modern-startup', icon: Rocket },
-  { value: 'minimal', icon: Minus },
-  { value: 'bold', icon: Eye },
-  { value: 'elegant', icon: Gem },
-]
-
-const SECTION_OPTIONS: { value: WebsiteSection; icon: typeof Globe }[] = [
-  { value: 'hero', icon: Monitor },
-  { value: 'features', icon: Star },
-  { value: 'pricing', icon: Banknote },
-  { value: 'testimonials', icon: Smile },
+const STANDARD_PAGES: { value: StandardPage; icon: typeof Globe }[] = [
+  { value: 'home', icon: Home },
   { value: 'about', icon: BookOpen },
-  { value: 'faq', icon: HelpCircle },
-  { value: 'contact', icon: MessageCircle },
+  { value: 'services', icon: Layers },
+  { value: 'pricing', icon: Banknote },
+  { value: 'portfolio', icon: Briefcase },
   { value: 'blog', icon: Pen },
-  { value: 'newsletter', icon: Mail },
-  { value: 'footer', icon: Footprints },
+  { value: 'faq', icon: HelpCircle },
+  { value: 'contact', icon: Phone },
+  { value: 'privacy-policy', icon: ScrollText },
+  { value: 'terms', icon: Scale },
 ]
 
-const AUDIENCE_OPTIONS: { value: TargetAudience; icon: typeof Globe }[] = [
-  { value: 'students', icon: GraduationCap },
-  { value: 'businesses', icon: BriefcaseBusiness },
-  { value: 'developers', icon: Code },
-  { value: 'creators', icon: Lightbulb },
-  { value: 'startups', icon: Rocket },
-  { value: 'enterprise', icon: Building2 },
-  { value: 'other', icon: Ellipsis },
-]
-
-const TONE_OPTIONS: { value: Tone; icon: typeof Globe }[] = [
-  { value: 'professional', icon: BriefcaseBusiness },
-  { value: 'friendly', icon: Smile },
-  { value: 'luxury', icon: Gem },
-  { value: 'minimal', icon: Minus },
-  { value: 'playful', icon: Gamepad2 },
-  { value: 'corporate', icon: Building2 },
-]
-
-const ADVANCED_OPTIONS_LIST: { value: AdvancedOption; icon: typeof Globe }[] = [
-  { value: 'seo', icon: Search },
-  { value: 'accessibility', icon: ShieldCheck },
-  { value: 'responsive-design', icon: Smartphone },
-  { value: 'dark-mode', icon: Moon },
-  { value: 'animations', icon: Film },
-  { value: 'performance', icon: Gauge },
-  { value: 'auth-ready', icon: Lock },
-  { value: 'database-ready', icon: Database },
+const FEATURES: { value: WebsiteFeature; icon: typeof Globe; desc: string }[] = [
+  { value: 'contact-form', icon: Mail, desc: 'Let visitors send you messages' },
+  { value: 'newsletter', icon: FileText, desc: 'Collect email subscriptions' },
+  { value: 'booking', icon: CalendarCheck, desc: 'Accept appointments online' },
+  { value: 'testimonials', icon: Star, desc: 'Showcase customer reviews' },
+  { value: 'gallery', icon: ImageIcon, desc: 'Display visual work' },
+  { value: 'analytics', icon: Gauge, desc: 'Track visitor metrics' },
+  { value: 'live-chat', icon: MessageSquare, desc: 'Real-time customer support' },
+  { value: 'authentication', icon: Lock, desc: 'User login and signup' },
+  { value: 'dashboard', icon: LayoutDashboard, desc: 'Private user dashboard' },
+  { value: 'cms-ready', icon: Database, desc: 'Content management system' },
 ]
 
 const PRESET_COLORS = [
@@ -187,67 +176,16 @@ const PRESET_COLORS = [
   '#06B6D4', '#6366F1', '#A855F7', '#78716C',
 ]
 
+const COUNTRIES = [
+  'United States', 'United Kingdom', 'Canada', 'Australia', 'Germany',
+  'France', 'Spain', 'Italy', 'Netherlands', 'Sweden', 'Japan',
+  'Singapore', 'India', 'Brazil', 'Mexico', 'Other',
+]
+
 const stepVariants = {
   enter: { x: 60, opacity: 0 },
   center: { x: 0, opacity: 1 },
   exit: { x: -60, opacity: 0 },
-}
-
-/* ─────────────────────────────────────────────
-   Dropdown helper
-   ───────────────────────────────────────────── */
-
-function SelectDropdown({
-  open,
-  setOpen,
-  options,
-  selected,
-  onSelect,
-  labelMap,
-}: {
-  open: boolean
-  setOpen: (v: boolean) => void
-  options: string[]
-  selected: string
-  onSelect: (v: string) => void
-  labelMap: Record<string, string>
-}) {
-  return (
-    <div className="relative">
-      <button
-        type="button"
-        onClick={() => setOpen(!open)}
-        className="flex w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-2.5 text-sm shadow-sm transition-colors hover:border-muted-foreground/30 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-      >
-        <span className={selected ? 'text-foreground' : 'text-muted-foreground'}>
-          {selected ? labelMap[selected] ?? selected : 'Select...'}
-        </span>
-        <ChevronDown className={`size-4 text-muted-foreground transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
-      </button>
-      {open && (
-        <>
-          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute z-20 mt-1 w-full rounded-md border border-border bg-card shadow-lg">
-            <div className="max-h-52 overflow-y-auto py-1">
-              {options.map((opt) => (
-                <button
-                  key={opt}
-                  type="button"
-                  onClick={() => { onSelect(opt); setOpen(false) }}
-                  className={`flex w-full items-center justify-between px-3 py-2 text-sm transition-colors hover:bg-muted ${
-                    selected === opt ? 'text-primary bg-primary/5' : 'text-foreground'
-                  }`}
-                >
-                  {labelMap[opt] ?? opt}
-                  {selected === opt && <Check className="size-3.5 text-primary" />}
-                </button>
-              ))}
-            </div>
-          </div>
-        </>
-      )}
-    </div>
-  )
 }
 
 /* ─────────────────────────────────────────────
@@ -268,7 +206,7 @@ export interface WebsiteGenerationWizardProps {
 }
 
 /* ─────────────────────────────────────────────
-   Component
+   Main Component
    ───────────────────────────────────────────── */
 
 export function WebsiteGenerationWizard({
@@ -288,21 +226,29 @@ export function WebsiteGenerationWizard({
     [setConfig],
   )
 
-  // ── Dropdown open states ──
-  const catRef = useRef(false)
-  const goalRef = useRef(false)
+  // ── Autosave indicator ──
+  const [autosaveState, setAutosaveState] = useState<'idle' | 'saving' | 'saved'>('idle')
+  const firstRender = useRef(true)
 
-  function closeAll() {
-    catRef.current = false
-    goalRef.current = false
-  }
+  useEffect(() => {
+    if (firstRender.current) {
+      firstRender.current = false
+      return
+    }
+    setAutosaveState('saving')
+    const t = setTimeout(() => setAutosaveState('saved'), 600)
+    return () => clearTimeout(t)
+  }, [config])
 
   // ── Step validators ──
-  const canProceedStep1 = config.businessName.trim().length > 0 && config.businessCategory !== '' && config.websiteGoal !== ''
-  const canProceedStep2 = config.preferredStyle !== ''
-  const canProceedStep3 = config.sections.length > 0
-  const canProceedStep4 = config.targetAudiences.length > 0 && config.tone !== ''
-  // Step 5 always proceeds (advanced options optional)
+  const canProceedStep1 =
+    config.businessName.trim().length > 0 &&
+    config.industry !== '' &&
+    config.websiteGoal !== ''
+  const canProceedStep2 = config.primaryAudience.trim().length > 0 && config.customerType !== ''
+  const canProceedStep3 = config.designStyle !== ''
+  const canProceedStep4 = config.pages.length > 0
+  // Step 5 always proceeds (features optional)
 
   const canProceed: Record<WizardStep, boolean> = {
     1: canProceedStep1,
@@ -325,7 +271,6 @@ export function WebsiteGenerationWizard({
   }
 
   function handleOpenChange(next: boolean) {
-    if (!next) closeAll()
     onOpenChange(next)
   }
 
@@ -335,34 +280,60 @@ export function WebsiteGenerationWizard({
       {/* ── Header ── */}
       <div className="text-center space-y-1.5">
         <h2 className="text-lg font-bold text-foreground">Generate Website</h2>
-        <p className="text-sm text-muted-foreground">
-          Step {step} of {TOTAL_STEPS} — {STEP_LABELS[step]}
-        </p>
+        <div className="flex items-center justify-center gap-2">
+          <p className="text-sm text-muted-foreground">
+            Step {step} of {TOTAL_STEPS} — {STEP_LABELS[step]}
+          </p>
+          {autosaveState === 'saving' && (
+            <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+              <Loader2 className="size-3 animate-spin" />
+              Saving…
+            </span>
+          )}
+          {autosaveState === 'saved' && (
+            <span className="inline-flex items-center gap-1 text-xs text-emerald-400">
+              <Check className="size-3" />
+              Saved
+            </span>
+          )}
+        </div>
       </div>
 
-      {/* ── Progress dots ── */}
-      <div className="flex items-center justify-center gap-2 pt-1 pb-2">
-        {progressDots.map((dot) => (
-          <div
-            key={dot}
-            className={`size-2 rounded-full transition-colors duration-300 ${
-              dot <= step ? 'bg-primary' : 'bg-muted'
-            }`}
+      {/* ── Progress bar ── */}
+      <div className="w-full pt-3 pb-2">
+        <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+          <motion.div
+            className="h-full rounded-full bg-primary"
+            initial={false}
+            animate={{ width: `${(step / TOTAL_STEPS) * 100}%` }}
+            transition={{ duration: 0.4, ease: 'easeOut' }}
           />
-        ))}
+        </div>
+        <div className="flex items-center justify-between mt-2">
+          {progressDots.map((dot) => (
+            <button
+              key={dot}
+              type="button"
+              onClick={() => dot <= step && setStep(dot)}
+              disabled={dot > step}
+              className={`size-2.5 rounded-full transition-all duration-300 ${
+                dot === step
+                  ? 'bg-primary scale-125'
+                  : dot < step
+                    ? 'bg-primary/60'
+                    : 'bg-muted'
+              }`}
+              aria-label={`Step ${dot}`}
+            />
+          ))}
+        </div>
       </div>
 
       {/* ── Step content ── */}
-      <div className="relative overflow-hidden flex-1" style={{ minHeight: variant === 'fullscreen' ? 400 : 340 }}>
+      <div className="relative overflow-hidden flex-1" style={{ minHeight: variant === 'fullscreen' ? 420 : 360 }}>
         <AnimatePresence mode="wait" initial={false}>
           {step === 1 && (
-            <Step1
-              key="s1"
-              config={config}
-              updateConfig={updateConfig}
-              catOpen={catRef}
-              goalOpen={goalRef}
-            />
+            <Step1 key="s1" config={config} updateConfig={updateConfig} />
           )}
           {step === 2 && (
             <Step2 key="s2" config={config} updateConfig={updateConfig} />
@@ -440,7 +411,7 @@ export function WebsiteGenerationWizard({
               </Button>
             </div>
 
-            <div className="flex-1 max-w-2xl w-full mx-auto px-4 py-8 flex flex-col justify-center">
+            <div className="flex-1 max-w-2xl w-full mx-auto px-4 py-8 flex flex-col justify-center overflow-y-auto">
               {wizardContent}
             </div>
           </motion.div>
@@ -460,19 +431,131 @@ export function WebsiteGenerationWizard({
 }
 
 /* ─────────────────────────────────────────────
+   Reusable Field Components
+   ───────────────────────────────────────────── */
+
+function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
+  return (
+    <label className="text-sm font-medium text-foreground">
+      {children} {required && <span className="text-destructive">*</span>}
+    </label>
+  )
+}
+
+function SelectDropdown({
+  options,
+  selected,
+  onSelect,
+  labelMap,
+  placeholder = 'Select...',
+}: {
+  options: string[]
+  selected: string
+  onSelect: (v: string) => void
+  labelMap: Record<string, string>
+  placeholder?: string
+}) {
+  const [open, setOpen] = useState(false)
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="flex w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-2.5 text-sm shadow-sm transition-colors hover:border-muted-foreground/30 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+      >
+        <span className={selected ? 'text-foreground' : 'text-muted-foreground'}>
+          {selected ? labelMap[selected] ?? selected : placeholder}
+        </span>
+        <ChevronDown className={`size-4 text-muted-foreground transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
+          <div className="absolute z-20 mt-1 w-full rounded-md border border-border bg-card shadow-lg">
+            <div className="max-h-52 overflow-y-auto py-1">
+              {options.map((opt) => (
+                <button
+                  key={opt}
+                  type="button"
+                  onClick={() => { onSelect(opt); setOpen(false) }}
+                  className={`flex w-full items-center justify-between px-3 py-2 text-sm transition-colors hover:bg-muted ${
+                    selected === opt ? 'text-primary bg-primary/5' : 'text-foreground'
+                  }`}
+                >
+                  {labelMap[opt] ?? opt}
+                  {selected === opt && <Check className="size-3.5 text-primary" />}
+                </button>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+function ColorPicker({
+  label,
+  value,
+  onChange,
+  icon: Icon,
+}: {
+  label: string
+  value: string
+  onChange: (v: string) => void
+  icon: typeof Palette
+}) {
+  return (
+    <div className="space-y-2">
+      <FieldLabel>
+        <span className="inline-flex items-center gap-1.5">
+          <Icon className="size-3.5" />
+          {label}
+        </span>
+      </FieldLabel>
+      <div className="flex items-center gap-3">
+        <div className="relative">
+          <input
+            type="color"
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            className="absolute inset-0 opacity-0 cursor-pointer"
+          />
+          <div
+            className="size-9 rounded-lg border-2 border-border shadow-sm cursor-pointer"
+            style={{ backgroundColor: value }}
+          />
+        </div>
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {PRESET_COLORS.map((color) => (
+            <button
+              key={color}
+              type="button"
+              onClick={() => onChange(color)}
+              className={`size-6 rounded-full border-2 transition-transform hover:scale-110 ${
+                value === color ? 'border-foreground scale-110' : 'border-transparent'
+              }`}
+              style={{ backgroundColor: color }}
+              aria-label={color}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ─────────────────────────────────────────────
    Step 1: Business Information
    ───────────────────────────────────────────── */
 
 function Step1({
   config,
   updateConfig,
-  catOpen,
-  goalOpen,
 }: {
   config: GenerationConfig
   updateConfig: (patch: Partial<GenerationConfig>) => void
-  catOpen: React.MutableRefObject<boolean>
-  goalOpen: React.MutableRefObject<boolean>
 }) {
   return (
     <motion.div
@@ -482,9 +565,7 @@ function Step1({
     >
       {/* Business Name */}
       <div className="space-y-2">
-        <label className="text-sm font-medium text-foreground">
-          Business Name <span className="text-destructive">*</span>
-        </label>
+        <FieldLabel required>Business Name</FieldLabel>
         <Input
           placeholder="e.g. Acme Corp"
           value={config.businessName}
@@ -493,11 +574,19 @@ function Step1({
         />
       </div>
 
+      {/* Tagline */}
+      <div className="space-y-2">
+        <FieldLabel>Startup Tagline</FieldLabel>
+        <Input
+          placeholder="e.g. Build faster, ship smarter"
+          value={config.tagline}
+          onChange={(e) => updateConfig({ tagline: e.target.value })}
+        />
+      </div>
+
       {/* Business Description */}
       <div className="space-y-2">
-        <label className="text-sm font-medium text-foreground">
-          Business Description
-        </label>
+        <FieldLabel>Business Description</FieldLabel>
         <textarea
           className="flex w-full min-h-[80px] rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none"
           placeholder="What does your business do?"
@@ -507,39 +596,47 @@ function Step1({
         />
       </div>
 
-      {/* Business Category */}
+      {/* Industry */}
       <div className="space-y-2">
-        <label className="text-sm font-medium text-foreground">
-          Business Category <span className="text-destructive">*</span>
-        </label>
-        <div className="grid grid-cols-3 gap-2">
-          {BUSINESS_CATEGORIES.map((cat) => {
-            const Icon = CATEGORY_ICONS[cat]
-            const isSelected = config.businessCategory === cat
+        <FieldLabel required>Industry</FieldLabel>
+        <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+          {INDUSTRIES.map((ind) => {
+            const Icon = INDUSTRY_ICONS[ind]
+            const isSelected = config.industry === ind
             return (
               <button
-                key={cat}
+                key={ind}
                 type="button"
-                onClick={() => updateConfig({ businessCategory: cat })}
-                className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border text-sm font-medium transition-all duration-200 ${
+                onClick={() => updateConfig({ industry: ind })}
+                className={`flex flex-col items-center gap-1.5 px-2 py-3 rounded-lg border text-xs font-medium transition-all duration-200 ${
                   isSelected
                     ? 'border-primary bg-primary/10 text-primary shadow-sm shadow-primary/10'
                     : 'border-border bg-card text-muted-foreground hover:border-muted-foreground/30 hover:text-foreground hover:scale-[1.02]'
                 }`}
               >
                 <Icon className={`size-4 shrink-0 ${isSelected ? 'text-primary' : ''}`} />
-                <span className="truncate">{BUSINESS_CATEGORY_LABELS[cat]}</span>
+                <span className="truncate">{INDUSTRY_LABELS[ind]}</span>
               </button>
             )
           })}
         </div>
       </div>
 
+      {/* Country */}
+      <div className="space-y-2">
+        <FieldLabel>Country</FieldLabel>
+        <SelectDropdown
+          options={COUNTRIES}
+          selected={config.country}
+          onSelect={(v) => updateConfig({ country: v })}
+          labelMap={Object.fromEntries(COUNTRIES.map((c) => [c, c]))}
+          placeholder="Select country..."
+        />
+      </div>
+
       {/* Website Goal */}
       <div className="space-y-2">
-        <label className="text-sm font-medium text-foreground">
-          Website Goal <span className="text-destructive">*</span>
-        </label>
+        <FieldLabel required>Website Goal</FieldLabel>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           {WEBSITE_GOALS.map((goal) => {
             const Icon = GOAL_ICONS[goal]
@@ -567,7 +664,7 @@ function Step1({
 }
 
 /* ─────────────────────────────────────────────
-   Step 2: Brand Identity
+   Step 2: Target Audience
    ───────────────────────────────────────────── */
 
 function Step2({
@@ -583,139 +680,99 @@ function Step2({
       transition={{ duration: 0.25, ease: 'easeOut' }}
       className="space-y-5"
     >
-      {/* Theme */}
+      {/* Primary Audience */}
       <div className="space-y-2">
-        <label className="text-sm font-medium text-foreground">Theme</label>
+        <FieldLabel required>Primary Audience</FieldLabel>
+        <Input
+          placeholder="e.g. Indie developers, small business owners"
+          value={config.primaryAudience}
+          onChange={(e) => updateConfig({ primaryAudience: e.target.value })}
+          autoFocus
+        />
+      </div>
+
+      {/* Customer Type */}
+      <div className="space-y-2">
+        <FieldLabel required>Customer Type</FieldLabel>
         <div className="grid grid-cols-3 gap-2">
-          {THEME_OPTIONS.map((opt) => {
-            const Icon = opt.icon
-            const isSelected = config.theme === opt.value
+          {CUSTOMER_TYPES.map((ct) => {
+            const isSelected = config.customerType === ct
+            const icons: Record<CustomerType, typeof Globe> = {
+              b2b: BriefcaseBusiness,
+              b2c: Users,
+              both: Handshake,
+            }
+            const Icon = icons[ct]
             return (
               <button
-                key={opt.value}
+                key={ct}
                 type="button"
-                onClick={() => updateConfig({ theme: opt.value })}
-                className={`flex flex-col items-center gap-2 px-4 py-4 rounded-lg border text-sm font-medium transition-all duration-200 ${
+                onClick={() => updateConfig({ customerType: ct })}
+                className={`flex flex-col items-center gap-2 px-3 py-4 rounded-lg border text-sm font-medium transition-all duration-200 ${
                   isSelected
                     ? 'border-primary bg-primary/10 text-primary shadow-sm shadow-primary/10'
                     : 'border-border bg-card text-muted-foreground hover:border-muted-foreground/30 hover:text-foreground hover:scale-[1.02]'
                 }`}
               >
                 <Icon className={`size-5 shrink-0 ${isSelected ? 'text-primary' : ''}`} />
-                {opt.label}
+                {CUSTOMER_TYPE_LABELS[ct]}
               </button>
             )
           })}
         </div>
       </div>
 
-      {/* Primary Color */}
+      {/* Business Stage */}
       <div className="space-y-2">
-        <label className="text-sm font-medium text-foreground flex items-center gap-1.5">
-          <PaintBucket className="size-3.5" />
-          Primary Color
-        </label>
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <input
-              type="color"
-              value={config.primaryColor}
-              onChange={(e) => updateConfig({ primaryColor: e.target.value })}
-              className="absolute inset-0 opacity-0 cursor-pointer"
-            />
-            <div
-              className="size-9 rounded-lg border-2 border-border shadow-sm cursor-pointer"
-              style={{ backgroundColor: config.primaryColor }}
-            />
-          </div>
-          <div className="flex items-center gap-1.5 flex-wrap">
-            {PRESET_COLORS.map((color) => (
-              <button
-                key={color}
-                type="button"
-                onClick={() => updateConfig({ primaryColor: color })}
-                className={`size-6 rounded-full border-2 transition-transform hover:scale-110 ${
-                  config.primaryColor === color
-                    ? 'border-foreground scale-110'
-                    : 'border-transparent'
-                }`}
-                style={{ backgroundColor: color }}
-              />
-            ))}
-          </div>
-        </div>
+        <FieldLabel>Business Stage</FieldLabel>
+        <SelectDropdown
+          options={BUSINESS_STAGES}
+          selected={config.businessStage}
+          onSelect={(v) => updateConfig({ businessStage: v as BusinessStage })}
+          labelMap={BUSINESS_STAGE_LABELS}
+          placeholder="Select stage..."
+        />
       </div>
 
-      {/* Accent Color */}
+      {/* Target Age Group */}
       <div className="space-y-2">
-        <label className="text-sm font-medium text-foreground flex items-center gap-1.5">
-          <Palette className="size-3.5" />
-          Accent Color
-        </label>
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <input
-              type="color"
-              value={config.accentColor}
-              onChange={(e) => updateConfig({ accentColor: e.target.value })}
-              className="absolute inset-0 opacity-0 cursor-pointer"
-            />
-            <div
-              className="size-9 rounded-lg border-2 border-border shadow-sm cursor-pointer"
-              style={{ backgroundColor: config.accentColor }}
-            />
-          </div>
-          <div className="flex items-center gap-1.5 flex-wrap">
-            {PRESET_COLORS.map((color) => (
-              <button
-                key={color}
-                type="button"
-                onClick={() => updateConfig({ accentColor: color })}
-                className={`size-6 rounded-full border-2 transition-transform hover:scale-110 ${
-                  config.accentColor === color
-                    ? 'border-foreground scale-110'
-                    : 'border-transparent'
-                }`}
-                style={{ backgroundColor: color }}
-              />
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Preferred Style */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-foreground">
-          Preferred Style <span className="text-destructive">*</span>
-        </label>
-        <div className="grid grid-cols-4 gap-2">
-          {STYLE_OPTIONS.map((opt) => {
-            const Icon = opt.icon
-            const isSelected = config.preferredStyle === opt.value
+        <FieldLabel>Target Age Group</FieldLabel>
+        <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+          {AGE_GROUPS.map((ag) => {
+            const isSelected = config.targetAgeGroup === ag
             return (
               <button
-                key={opt.value}
+                key={ag}
                 type="button"
-                onClick={() => updateConfig({ preferredStyle: opt.value })}
-                className={`flex flex-col items-center gap-2 px-3 py-3 rounded-lg border text-xs font-medium transition-all duration-200 ${
+                onClick={() => updateConfig({ targetAgeGroup: ag })}
+                className={`px-3 py-2.5 rounded-lg border text-xs font-medium transition-all duration-200 ${
                   isSelected
                     ? 'border-primary bg-primary/10 text-primary shadow-sm shadow-primary/10'
                     : 'border-border bg-card text-muted-foreground hover:border-muted-foreground/30 hover:text-foreground hover:scale-[1.02]'
                 }`}
               >
-                <Icon className={`size-5 shrink-0 ${isSelected ? 'text-primary' : ''}`} />
-                {PREFERRED_STYLE_LABELS[opt.value]}
+                {AGE_GROUP_LABELS[ag]}
               </button>
             )
           })}
         </div>
+      </div>
+
+      {/* Target Countries */}
+      <div className="space-y-2">
+        <FieldLabel>Target Countries</FieldLabel>
+        <Input
+          placeholder="e.g. US, UK, Canada"
+          value={config.targetCountries}
+          onChange={(e) => updateConfig({ targetCountries: e.target.value })}
+        />
       </div>
     </motion.div>
   )
 }
 
 /* ─────────────────────────────────────────────
-   Step 3: Website Structure
+   Step 3: Website Style
    ───────────────────────────────────────────── */
 
 function Step3({
@@ -725,56 +782,71 @@ function Step3({
   config: GenerationConfig
   updateConfig: (patch: Partial<GenerationConfig>) => void
 }) {
-  const toggleSection = (section: WebsiteSection) => {
-    const next = config.sections.includes(section)
-      ? config.sections.filter((s) => s !== section)
-      : [...config.sections, section]
-    updateConfig({ sections: next })
-  }
-
   return (
     <motion.div
       variants={stepVariants} initial="enter" animate="center" exit="exit"
       transition={{ duration: 0.25, ease: 'easeOut' }}
-      className="space-y-4"
+      className="space-y-5"
     >
-      <p className="text-sm text-muted-foreground">
-        Select sections to include in your website
-        <span className="text-destructive">*</span>
-      </p>
-      <div className="grid grid-cols-2 gap-2">
-        {SECTION_OPTIONS.map((opt) => {
-          const Icon = opt.icon
-          const isSelected = config.sections.includes(opt.value)
-          return (
-            <button
-              key={opt.value}
-              type="button"
-              onClick={() => toggleSection(opt.value)}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg border text-sm font-medium transition-all duration-200 ${
-                isSelected
-                  ? 'border-primary bg-primary/10 text-primary shadow-sm shadow-primary/10'
-                  : 'border-border bg-card text-muted-foreground hover:border-muted-foreground/30 hover:text-foreground hover:scale-[1.02]'
-              }`}
-            >
-              <Icon className={`size-4 shrink-0 ${isSelected ? 'text-primary' : ''}`} />
-              <span>{WEBSITE_SECTION_LABELS[opt.value]}</span>
-              {isSelected && <Check className="size-3.5 text-primary ml-auto" />}
-            </button>
-          )
-        })}
+      {/* Design Style — visual cards */}
+      <div className="space-y-2">
+        <FieldLabel required>Choose a Style</FieldLabel>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {DESIGN_STYLES.map((opt) => {
+            const Icon = opt.icon
+            const isSelected = config.designStyle === opt.value
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => updateConfig({ designStyle: opt.value })}
+                className={`relative flex flex-col items-center gap-2 px-3 py-4 rounded-xl border transition-all duration-200 overflow-hidden ${
+                  isSelected
+                    ? 'border-primary shadow-md shadow-primary/10'
+                    : 'border-border hover:border-muted-foreground/30 hover:scale-[1.02]'
+                }`}
+              >
+                <div className={`absolute inset-0 ${opt.preview}`} />
+                <Icon className={`relative size-6 shrink-0 ${isSelected ? 'text-primary' : 'text-foreground'}`} />
+                <span className={`relative text-xs font-medium ${isSelected ? 'text-primary' : 'text-foreground'}`}>
+                  {DESIGN_STYLE_LABELS[opt.value]}
+                </span>
+                {isSelected && (
+                  <div className="absolute top-1.5 right-1.5">
+                    <Check className="size-3.5 text-primary" />
+                  </div>
+                )}
+              </button>
+            )
+          })}
+        </div>
       </div>
-      {config.sections.length > 0 && (
-        <p className="text-xs text-muted-foreground">
-          {config.sections.length} section{config.sections.length !== 1 ? 's' : ''} selected
-        </p>
-      )}
+
+      {/* Colors */}
+      <ColorPicker
+        label="Primary Color"
+        value={config.primaryColor}
+        onChange={(v) => updateConfig({ primaryColor: v })}
+        icon={Palette}
+      />
+      <ColorPicker
+        label="Secondary Color"
+        value={config.secondaryColor}
+        onChange={(v) => updateConfig({ secondaryColor: v })}
+        icon={Layers}
+      />
+      <ColorPicker
+        label="Accent Color"
+        value={config.accentColor}
+        onChange={(v) => updateConfig({ accentColor: v })}
+        icon={Sparkles}
+      />
     </motion.div>
   )
 }
 
 /* ─────────────────────────────────────────────
-   Step 4: Target Audience
+   Step 4: Website Structure
    ───────────────────────────────────────────── */
 
 function Step4({
@@ -784,11 +856,28 @@ function Step4({
   config: GenerationConfig
   updateConfig: (patch: Partial<GenerationConfig>) => void
 }) {
-  const toggleAudience = (audience: TargetAudience) => {
-    const next = config.targetAudiences.includes(audience)
-      ? config.targetAudiences.filter((a) => a !== audience)
-      : [...config.targetAudiences, audience]
-    updateConfig({ targetAudiences: next })
+  const [customPageName, setCustomPageName] = useState('')
+
+  const togglePage = (page: StandardPage) => {
+    const next = config.pages.includes(page)
+      ? config.pages.filter((p) => p !== page)
+      : [...config.pages, page]
+    updateConfig({ pages: next })
+  }
+
+  const addCustomPage = () => {
+    const name = customPageName.trim()
+    if (!name) return
+    const newPage: CustomPage = {
+      id: `custom-${Date.now()}`,
+      name,
+    }
+    updateConfig({ customPages: [...config.customPages, newPage] })
+    setCustomPageName('')
+  }
+
+  const removeCustomPage = (id: string) => {
+    updateConfig({ customPages: config.customPages.filter((p) => p.id !== id) })
   }
 
   return (
@@ -797,68 +886,92 @@ function Step4({
       transition={{ duration: 0.25, ease: 'easeOut' }}
       className="space-y-5"
     >
-      {/* Target Audience */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-foreground">
-          Target Audience <span className="text-destructive">*</span>
-        </label>
-        <div className="grid grid-cols-2 gap-2">
-          {AUDIENCE_OPTIONS.map((opt) => {
-            const Icon = opt.icon
-            const isSelected = config.targetAudiences.includes(opt.value)
-            return (
-              <button
-                key={opt.value}
-                type="button"
-                onClick={() => toggleAudience(opt.value)}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg border text-sm font-medium transition-all duration-200 ${
-                  isSelected
-                    ? 'border-primary bg-primary/10 text-primary shadow-sm shadow-primary/10'
-                    : 'border-border bg-card text-muted-foreground hover:border-muted-foreground/30 hover:text-foreground hover:scale-[1.02]'
-                }`}
-              >
-                <Icon className={`size-4 shrink-0 ${isSelected ? 'text-primary' : ''}`} />
-                <span>{TARGET_AUDIENCE_LABELS[opt.value]}</span>
-                {isSelected && <Check className="size-3.5 text-primary ml-auto" />}
-              </button>
-            )
-          })}
-        </div>
+      <p className="text-sm text-muted-foreground">
+        Select pages to include <span className="text-destructive">*</span>
+      </p>
+
+      {/* Standard pages */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+        {STANDARD_PAGES.map((opt) => {
+          const Icon = opt.icon
+          const isSelected = config.pages.includes(opt.value)
+          return (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => togglePage(opt.value)}
+              className={`flex items-center gap-2.5 px-3 py-3 rounded-lg border text-sm font-medium transition-all duration-200 ${
+                isSelected
+                  ? 'border-primary bg-primary/10 text-primary shadow-sm shadow-primary/10'
+                  : 'border-border bg-card text-muted-foreground hover:border-muted-foreground/30 hover:text-foreground hover:scale-[1.02]'
+              }`}
+            >
+              <Icon className={`size-4 shrink-0 ${isSelected ? 'text-primary' : ''}`} />
+              <span className="truncate">{STANDARD_PAGE_LABELS[opt.value]}</span>
+              {isSelected && <Check className="size-3.5 text-primary ml-auto" />}
+            </button>
+          )
+        })}
       </div>
 
-      {/* Tone */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-foreground">
-          Tone <span className="text-destructive">*</span>
-        </label>
-        <div className="grid grid-cols-3 gap-2">
-          {TONE_OPTIONS.map((opt) => {
-            const Icon = opt.icon
-            const isSelected = config.tone === opt.value
-            return (
-              <button
-                key={opt.value}
-                type="button"
-                onClick={() => updateConfig({ tone: opt.value })}
-                className={`flex flex-col items-center gap-2 px-3 py-3 rounded-lg border text-xs font-medium transition-all duration-200 ${
-                  isSelected
-                    ? 'border-primary bg-primary/10 text-primary shadow-sm shadow-primary/10'
-                    : 'border-border bg-card text-muted-foreground hover:border-muted-foreground/30 hover:text-foreground hover:scale-[1.02]'
-                }`}
-              >
-                <Icon className={`size-5 shrink-0 ${isSelected ? 'text-primary' : ''}`} />
-                {TONE_LABELS[opt.value]}
-              </button>
-            )
-          })}
+      {/* Custom pages */}
+      <div className="space-y-3">
+        <FieldLabel>Custom Pages</FieldLabel>
+        <div className="flex gap-2">
+          <Input
+            placeholder="Page name (e.g. Careers)"
+            value={customPageName}
+            onChange={(e) => setCustomPageName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                addCustomPage()
+              }
+            }}
+          />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={addCustomPage}
+            disabled={!customPageName.trim()}
+            className="gap-1.5 shrink-0"
+          >
+            <Plus className="size-4" />
+            Add
+          </Button>
         </div>
+        {config.customPages.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {config.customPages.map((cp) => (
+              <div
+                key={cp.id}
+                className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary"
+              >
+                {cp.name}
+                <button
+                  type="button"
+                  onClick={() => removeCustomPage(cp.id)}
+                  className="text-primary/60 hover:text-primary transition-colors"
+                >
+                  <X className="size-3" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
+
+      {config.pages.length > 0 && (
+        <p className="text-xs text-muted-foreground">
+          {config.pages.length + config.customPages.length} page{(config.pages.length + config.customPages.length) !== 1 ? 's' : ''} selected
+        </p>
+      )}
     </motion.div>
   )
 }
 
 /* ─────────────────────────────────────────────
-   Step 5: Advanced Options
+   Step 5: Features
    ───────────────────────────────────────────── */
 
 function Step5({
@@ -868,11 +981,11 @@ function Step5({
   config: GenerationConfig
   updateConfig: (patch: Partial<GenerationConfig>) => void
 }) {
-  const toggleOption = (opt: AdvancedOption) => {
-    const next = config.advancedOptions.includes(opt)
-      ? config.advancedOptions.filter((o) => o !== opt)
-      : [...config.advancedOptions, opt]
-    updateConfig({ advancedOptions: next })
+  const toggleFeature = (feat: WebsiteFeature) => {
+    const next = config.features.includes(feat)
+      ? config.features.filter((f) => f !== feat)
+      : [...config.features, feat]
+    updateConfig({ features: next })
   }
 
   return (
@@ -882,30 +995,42 @@ function Step5({
       className="space-y-4"
     >
       <p className="text-sm text-muted-foreground">
-        Enable advanced features for your website
+        Select features to include in your website
       </p>
-      <div className="grid grid-cols-2 gap-2">
-        {ADVANCED_OPTIONS_LIST.map((opt) => {
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        {FEATURES.map((opt) => {
           const Icon = opt.icon
-          const isSelected = config.advancedOptions.includes(opt.value)
+          const isSelected = config.features.includes(opt.value)
           return (
             <button
               key={opt.value}
               type="button"
-              onClick={() => toggleOption(opt.value)}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg border text-sm font-medium transition-all duration-200 ${
+              onClick={() => toggleFeature(opt.value)}
+              className={`flex items-start gap-3 px-4 py-3 rounded-lg border text-left transition-all duration-200 ${
                 isSelected
-                  ? 'border-primary bg-primary/10 text-primary shadow-sm shadow-primary/10'
-                  : 'border-border bg-card text-muted-foreground hover:border-muted-foreground/30 hover:text-foreground hover:scale-[1.02]'
+                  ? 'border-primary bg-primary/10 shadow-sm shadow-primary/10'
+                  : 'border-border bg-card hover:border-muted-foreground/30 hover:scale-[1.01]'
               }`}
             >
-              <Icon className={`size-4 shrink-0 ${isSelected ? 'text-primary' : ''}`} />
-              <span>{ADVANCED_OPTION_LABELS[opt.value]}</span>
-              {isSelected && <Check className="size-3.5 text-primary ml-auto" />}
+              <div className={`flex size-8 items-center justify-center rounded-lg shrink-0 ${isSelected ? 'bg-primary/20' : 'bg-muted'}`}>
+                <Icon className={`size-4 ${isSelected ? 'text-primary' : 'text-muted-foreground'}`} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <span className={`text-sm font-medium block ${isSelected ? 'text-primary' : 'text-foreground'}`}>
+                  {FEATURE_LABELS[opt.value]}
+                </span>
+                <span className="text-xs text-muted-foreground">{opt.desc}</span>
+              </div>
+              {isSelected && <Check className="size-4 text-primary shrink-0 mt-0.5" />}
             </button>
           )
         })}
       </div>
+      {config.features.length > 0 && (
+        <p className="text-xs text-muted-foreground">
+          {config.features.length} feature{config.features.length !== 1 ? 's' : ''} selected
+        </p>
+      )}
     </motion.div>
   )
 }
@@ -915,6 +1040,33 @@ function Step5({
    ───────────────────────────────────────────── */
 
 function Step6({ config }: { config: GenerationConfig }) {
+  const totalFields =
+    (config.businessName ? 1 : 0) +
+    (config.tagline ? 1 : 0) +
+    (config.businessDescription ? 1 : 0) +
+    (config.industry ? 1 : 0) +
+    (config.country ? 1 : 0) +
+    (config.websiteGoal ? 1 : 0) +
+    (config.primaryAudience ? 1 : 0) +
+    (config.customerType ? 1 : 0) +
+    (config.businessStage ? 1 : 0) +
+    (config.targetAgeGroup ? 1 : 0) +
+    (config.targetCountries ? 1 : 0) +
+    (config.designStyle ? 1 : 0) +
+    config.pages.length +
+    config.customPages.length +
+    config.features.length
+
+  const complexity =
+    totalFields <= 5 ? 'Low' : totalFields <= 10 ? 'Medium' : totalFields <= 15 ? 'High' : 'Very High'
+
+  const complexityColor: Record<string, string> = {
+    Low: 'text-emerald-400',
+    Medium: 'text-yellow-400',
+    High: 'text-orange-400',
+    'Very High': 'text-red-400',
+  }
+
   return (
     <motion.div
       variants={stepVariants} initial="enter" animate="center" exit="exit"
@@ -930,25 +1082,28 @@ function Step6({ config }: { config: GenerationConfig }) {
 
         {/* Business */}
         <SectionBlock title="Business">
-          <ReviewRow label="Name" value={config.businessName} />
-          {config.businessDescription && (
-            <ReviewRow label="Description" value={config.businessDescription} />
-          )}
-          <ReviewRow
-            label="Category"
-            value={BUSINESS_CATEGORY_LABELS[config.businessCategory as BusinessCategory] ?? '—'}
-          />
-          <ReviewRow
-            label="Goal"
-            value={WEBSITE_GOAL_LABELS[config.websiteGoal as WebsiteGoal] ?? '—'}
-          />
+          <ReviewRow label="Name" value={config.businessName || '—'} />
+          {config.tagline && <ReviewRow label="Tagline" value={config.tagline} />}
+          {config.businessDescription && <ReviewRow label="Description" value={config.businessDescription} />}
+          <ReviewRow label="Industry" value={config.industry ? INDUSTRY_LABELS[config.industry] : '—'} />
+          <ReviewRow label="Country" value={config.country || '—'} />
+          <ReviewRow label="Goal" value={config.websiteGoal ? WEBSITE_GOAL_LABELS[config.websiteGoal] : '—'} />
         </SectionBlock>
 
-        {/* Design */}
-        <SectionBlock title="Design">
-          <ReviewRow label="Theme" value={config.theme.charAt(0).toUpperCase() + config.theme.slice(1)} />
+        {/* Audience */}
+        <SectionBlock title="Audience">
+          <ReviewRow label="Primary" value={config.primaryAudience || '—'} />
+          <ReviewRow label="Customer Type" value={config.customerType ? CUSTOMER_TYPE_LABELS[config.customerType] : '—'} />
+          <ReviewRow label="Stage" value={config.businessStage ? BUSINESS_STAGE_LABELS[config.businessStage] : '—'} />
+          <ReviewRow label="Age Group" value={config.targetAgeGroup ? AGE_GROUP_LABELS[config.targetAgeGroup] : '—'} />
+          <ReviewRow label="Countries" value={config.targetCountries || '—'} />
+        </SectionBlock>
+
+        {/* Theme */}
+        <SectionBlock title="Theme">
+          <ReviewRow label="Style" value={config.designStyle ? DESIGN_STYLE_LABELS[config.designStyle] : '—'} />
           <ReviewRow
-            label="Primary Color"
+            label="Primary"
             value={
               <span className="inline-flex items-center gap-1.5">
                 <span className="size-3.5 rounded-full border border-border inline-block" style={{ backgroundColor: config.primaryColor }} />
@@ -957,7 +1112,16 @@ function Step6({ config }: { config: GenerationConfig }) {
             }
           />
           <ReviewRow
-            label="Accent Color"
+            label="Secondary"
+            value={
+              <span className="inline-flex items-center gap-1.5">
+                <span className="size-3.5 rounded-full border border-border inline-block" style={{ backgroundColor: config.secondaryColor }} />
+                {config.secondaryColor}
+              </span>
+            }
+          />
+          <ReviewRow
+            label="Accent"
             value={
               <span className="inline-flex items-center gap-1.5">
                 <span className="size-3.5 rounded-full border border-border inline-block" style={{ backgroundColor: config.accentColor }} />
@@ -965,47 +1129,49 @@ function Step6({ config }: { config: GenerationConfig }) {
               </span>
             }
           />
-          <ReviewRow
-            label="Style"
-            value={PREFERRED_STYLE_LABELS[config.preferredStyle as PreferredStyle] ?? '—'}
-          />
         </SectionBlock>
 
-        {/* Audience */}
-        <SectionBlock title="Audience">
+        {/* Pages */}
+        <SectionBlock title="Pages">
           <ReviewRow
-            label="Target"
-            value={config.targetAudiences.map((a) => TARGET_AUDIENCE_LABELS[a]).join(', ') || '—'}
-          />
-          <ReviewRow
-            label="Tone"
-            value={TONE_LABELS[config.tone as Tone] ?? '—'}
-          />
-        </SectionBlock>
-
-        {/* Sections */}
-        <SectionBlock title="Website Sections">
-          <ReviewRow
-            label="Sections"
+            label="Standard"
             value={
-              config.sections.length > 0
-                ? config.sections.map((s) => WEBSITE_SECTION_LABELS[s]).join(', ')
+              config.pages.length > 0
+                ? config.pages.map((p) => STANDARD_PAGE_LABELS[p]).join(', ')
                 : '—'
             }
           />
+          {config.customPages.length > 0 && (
+            <ReviewRow
+              label="Custom"
+              value={config.customPages.map((p) => p.name).join(', ')}
+            />
+          )}
         </SectionBlock>
 
-        {/* Advanced */}
-        <SectionBlock title="Advanced Options">
+        {/* Features */}
+        <SectionBlock title="Features">
           <ReviewRow
-            label="Features"
+            label="Selected"
             value={
-              config.advancedOptions.length > 0
-                ? config.advancedOptions.map((o) => ADVANCED_OPTION_LABELS[o]).join(', ')
+              config.features.length > 0
+                ? config.features.map((f) => FEATURE_LABELS[f]).join(', ')
                 : 'None'
             }
           />
         </SectionBlock>
+
+        {/* AI Complexity */}
+        <div className="pt-3 border-t border-border">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Estimated AI Complexity
+            </span>
+            <span className={`text-sm font-bold ${complexityColor[complexity]}`}>
+              {complexity}
+            </span>
+          </div>
+        </div>
       </div>
     </motion.div>
   )

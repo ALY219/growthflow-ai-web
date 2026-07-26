@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
-import { createFileRoute, Link, useParams } from '@tanstack/react-router'
+import { createFileRoute, Link, useParams, useNavigate } from '@tanstack/react-router'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Card,
@@ -146,6 +146,7 @@ function ProjectDetailPage() {
   const { user } = useAuth()
   const { data: projects = [], isLoading } = useProjects(user?.id)
   const { id } = useParams({ from: '/app/projects/$id' })
+  const navigate = useNavigate()
   const createGenJob = useCreateGenerationJob()
 
   const project = useMemo(
@@ -226,7 +227,7 @@ function ProjectDetailPage() {
     }, 7000)
   }, [])
 
-  /* ── Wizard submit: save to DB then show status ── */
+  /* ── Wizard submit: save to DB then redirect to generation page ── */
   const handleWizardSubmit = useCallback(async () => {
     if (!user?.id || !project) return
 
@@ -242,12 +243,11 @@ function ProjectDetailPage() {
 
       setWizardOpen(false)
       setWizardPending(false)
-      // Switch to generation status view
-      setViewState('status')
+      navigate({ to: '/app/projects/$id/generation', params: { id: project.id } })
     } catch {
       setWizardPending(false)
     }
-  }, [user?.id, project, wizardConfig, createGenJob])
+  }, [user?.id, project, wizardConfig, createGenJob, navigate])
 
   /* ── Status view done → return to workspace ── */
   const handleStatusDone = useCallback(() => {
