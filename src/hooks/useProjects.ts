@@ -91,19 +91,6 @@ export function useCreateProject() {
   })
 }
 
-export function useDeleteProject() {
-  const queryClient = useQueryClient()
-
-  return useMutation<void, Error, string>({
-    mutationFn: async (id) => {
-      await projectsTable.delete(id)
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['projects'] })
-    },
-  })
-}
-
 export function useCreateGenerationJob() {
   const queryClient = useQueryClient()
 

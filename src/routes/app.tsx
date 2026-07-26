@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
+import { createFileRoute, Outlet, useNavigate } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { blink } from '@/blink/client'
 import { DashboardSidebar } from '@/components/dashboard/DashboardSidebar'
@@ -10,6 +10,7 @@ export const Route = createFileRoute('/app')({
 function AppLayout() {
   const [ready, setReady] = useState(false)
   const [authenticated, setAuthenticated] = useState(false)
+  const navigate = useNavigate()
 
   useEffect(() => {
     const unsubscribe = blink.auth.onAuthStateChanged((state) => {
@@ -30,12 +31,7 @@ function AppLayout() {
 
   // Redirect to sign-in if not authenticated
   if (!authenticated) {
-    // Use window.location for redirect since redirect() in TanStack
-    // can be tricky with client-side auth state
-    if (typeof window !== 'undefined') {
-      window.location.href = '/sign-in'
-      return null
-    }
+    navigate({ to: '/sign-in', replace: true })
     return null
   }
 

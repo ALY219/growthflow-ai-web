@@ -8,6 +8,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { BlinkUIProvider, Toaster } from '@blinkdotnew/ui'
 import type { ReactNode } from 'react'
 import indexCss from '../index.css?url'
+import { RootErrorBoundary } from '@/components/RootErrorBoundary'
 
 const queryClient = new QueryClient()
 
@@ -88,13 +89,9 @@ function RootDocument({ children }: { children: ReactNode }) {
         <QueryClientProvider client={queryClient}>
           <BlinkUIProvider theme="linear" darkMode="dark">
             <Toaster />
-            {/*
-              Full-bleed by default — NO app chrome. Child routes render directly.
-              SaaS / dashboard app? Opt in by adding a `src/routes/_app.tsx` layout
-              route with pages under `src/routes/_app/`. Landing pages, marketing
-              sites, content, and games stay full-bleed.
-            */}
-            {children}
+            <RootErrorBoundary>
+              {children}
+            </RootErrorBoundary>
           </BlinkUIProvider>
         </QueryClientProvider>
         <Scripts />

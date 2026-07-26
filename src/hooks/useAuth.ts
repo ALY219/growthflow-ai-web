@@ -15,7 +15,7 @@ function mapUser(u: BlinkUser | null): UserState | null {
     id: u.id,
     email: u.email ?? '',
     displayName: u.displayName ?? u.email?.split('@')[0] ?? 'User',
-    avatarUrl: u.avatar ?? undefined,
+    avatarUrl: u.photoURL ?? undefined,
   }
 }
 

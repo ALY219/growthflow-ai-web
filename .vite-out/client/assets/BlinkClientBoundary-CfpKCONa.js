@@ -1,1 +1,0 @@
-import{G as e,K as t}from"./index-kn8RiRiT.js";var n=t();function r({children:t,fallback:r=null}){return(0,n.jsx)(e,{fallback:r,children:t})}export{r as t};
