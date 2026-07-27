@@ -62,8 +62,6 @@ export function useDeleteProject() {
   })
 }
 
-/* ── Generation Jobs ── */
-
 export interface GenerationJob {
   id: string
   project_id: string

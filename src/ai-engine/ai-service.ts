@@ -18,9 +18,9 @@ export type ProviderName = 'gemini' | 'openai' | 'claude' | 'deepseek'
 const providers: Record<ProviderName, AIProvider> = {
   gemini: new GeminiProvider(),
   // Future providers — not yet implemented:
-  openai: new GeminiProvider(), // placeholder, swap when OpenAIProvider is built
-  claude: new GeminiProvider(), // placeholder, swap when ClaudeProvider is built
-  deepseek: new GeminiProvider(), // placeholder, swap when DeepSeekProvider is built
+  openai: new GeminiProvider(),
+  claude: new GeminiProvider(),
+  deepseek: new GeminiProvider(),
 }
 
 let activeProvider: ProviderName = 'gemini'

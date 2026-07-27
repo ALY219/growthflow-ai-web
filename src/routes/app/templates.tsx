@@ -19,21 +19,11 @@ const templates = [
 function TemplatesPage() {
   return (
     <div className="space-y-6 max-w-5xl">
-      <div>
-        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Templates</h1>
-        <p className="text-sm text-muted-foreground mt-1">Start from a pre-built template</p>
-      </div>
+      <div><h1 className="text-2xl md:text-3xl font-bold tracking-tight">Templates</h1><p className="text-sm text-muted-foreground mt-1">Start from a pre-built template</p></div>
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
         {templates.map((t) => (
           <Card key={t.name} className="border-border bg-card hover:border-primary/50 transition-colors cursor-pointer">
-            <CardContent className="p-5">
-              <FileText className="size-6 text-primary mb-3" />
-              <p className="font-semibold">{t.name}</p>
-              <p className="text-xs text-muted-foreground mt-1">{t.desc}</p>
-              <span className="inline-block mt-3 rounded-full bg-accent px-2.5 py-0.5 text-xs font-medium text-accent-foreground">
-                {t.style}
-              </span>
-            </CardContent>
+            <CardContent className="p-5"><FileText className="size-6 text-primary mb-3" /><p className="font-semibold">{t.name}</p><p className="text-xs text-muted-foreground mt-1">{t.desc}</p><span className="inline-block mt-3 rounded-full bg-accent px-2.5 py-0.5 text-xs font-medium text-accent-foreground">{t.style}</span></CardContent>
           </Card>
         ))}
       </div>

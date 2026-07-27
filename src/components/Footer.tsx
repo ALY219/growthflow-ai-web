@@ -13,11 +13,8 @@ export function Footer() {
               </div>
               <span className="text-base font-bold">GrowthFlow AI</span>
             </Link>
-            <p className="text-sm text-muted-foreground max-w-xs">
-              AI-powered website generation for businesses of all sizes.
-            </p>
+            <p className="text-sm text-muted-foreground max-w-xs">AI-powered website generation for businesses of all sizes.</p>
           </div>
-
           <div>
             <h4 className="text-sm font-semibold mb-3">Product</h4>
             <ul className="space-y-2">
@@ -26,7 +23,6 @@ export function Footer() {
               <li><Link to="/app/templates" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Templates</Link></li>
             </ul>
           </div>
-
           <div>
             <h4 className="text-sm font-semibold mb-3">Company</h4>
             <ul className="space-y-2">
@@ -35,7 +31,6 @@ export function Footer() {
               <li><Link to="/terms" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Terms of Service</Link></li>
             </ul>
           </div>
-
           <div>
             <h4 className="text-sm font-semibold mb-3">Get Started</h4>
             <ul className="space-y-2">
@@ -44,11 +39,8 @@ export function Footer() {
             </ul>
           </div>
         </div>
-
         <div className="mt-8 pt-8 border-t border-border">
-          <p className="text-xs text-muted-foreground text-center">
-            © {new Date().getFullYear()} GrowthFlow AI. All rights reserved.
-          </p>
+          <p className="text-xs text-muted-foreground text-center">© {new Date().getFullYear()} GrowthFlow AI. All rights reserved.</p>
         </div>
       </div>
     </footer>

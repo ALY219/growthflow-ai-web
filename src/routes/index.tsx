@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { motion } from 'framer-motion'
-import { Sparkles, ArrowRight, Zap, Globe, Palette, Code2, CheckCircle2 } from 'lucide-react'
+import { Sparkles, ArrowRight, Zap, Globe, Palette, Code2 } from 'lucide-react'
 import { Button } from '@blinkdotnew/ui'
 
 export const Route = createFileRoute('/')({
@@ -11,49 +11,22 @@ export const Route = createFileRoute('/')({
 function HomePage() {
   return (
     <div>
-      {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent" />
         <div className="container mx-auto px-4 py-24 md:py-32 relative">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="max-w-3xl mx-auto text-center"
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="max-w-3xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-1.5 mb-6">
               <Sparkles className="size-4 text-primary" />
               <span className="text-sm font-medium">Powered by Google Gemini AI</span>
             </div>
-            <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-balance mb-6">
-              Generate Your Website with{' '}
-              <span className="text-primary">AI</span>
-            </h1>
-            <p className="text-lg md:text-xl text-muted-foreground mb-8 text-balance">
-              Describe your business, choose your style, and let AI create a complete
-              website blueprint in seconds. No coding required.
-            </p>
+            <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-balance mb-6">Generate Your Website with <span className="text-primary">AI</span></h1>
+            <p className="text-lg md:text-xl text-muted-foreground mb-8 text-balance">Describe your business, choose your style, and let AI create a complete website blueprint in seconds. No coding required.</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/sign-up">
-                <Button size="lg" className="gap-2 w-full sm:w-auto">
-                  Start Generating
-                  <ArrowRight className="size-4" />
-                </Button>
-              </Link>
-              <Link to="/pricing">
-                <Button variant="outline" size="lg" className="w-full sm:w-auto">
-                  View Pricing
-                </Button>
-              </Link>
+              <Link to="/sign-up"><Button size="lg" className="gap-2 w-full sm:w-auto">Start Generating<ArrowRight className="size-4" /></Button></Link>
+              <Link to="/pricing"><Button variant="outline" size="lg" className="w-full sm:w-auto">View Pricing</Button></Link>
             </div>
           </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto"
-          >
+          <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }} className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
             {[
               { icon: Zap, label: 'AI-Powered', desc: 'Gemini-driven generation' },
               { icon: Globe, label: 'Multi-Page', desc: 'Full website blueprints' },
@@ -69,8 +42,6 @@ function HomePage() {
           </motion.div>
         </div>
       </section>
-
-      {/* How it works */}
       <section className="container mx-auto px-4 py-20">
         <h2 className="text-3xl font-bold text-center mb-12">How It Works</h2>
         <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
@@ -87,21 +58,12 @@ function HomePage() {
           ))}
         </div>
       </section>
-
-      {/* CTA */}
       <section className="container mx-auto px-4 py-20">
         <div className="rounded-2xl border border-border bg-gradient-to-r from-primary/10 to-accent/10 p-12 text-center">
           <h2 className="text-3xl font-bold mb-4">Ready to Build Your Website?</h2>
-          <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
-            Join GrowthFlow AI and generate your first website blueprint in minutes.
-          </p>
+          <p className="text-muted-foreground mb-8 max-w-xl mx-auto">Join GrowthFlow AI and generate your first website blueprint in minutes.</p>
           <div className="flex gap-4 justify-center">
-            <Link to="/sign-up">
-              <Button size="lg" className="gap-2">
-                Get Started Free
-                <ArrowRight className="size-4" />
-              </Button>
-            </Link>
+            <Link to="/sign-up"><Button size="lg" className="gap-2">Get Started Free<ArrowRight className="size-4" /></Button></Link>
           </div>
         </div>
       </section>

@@ -19,9 +19,7 @@ Deno.serve(async (req: Request) => {
     const apiKey = Deno.env.get("GEMINI_API_KEY");
     if (!apiKey) {
       return new Response(
-        JSON.stringify({
-          error: "Gemini API key is not configured. Set GEMINI_API_KEY as an edge function secret.",
-        }),
+        JSON.stringify({ error: "Gemini API key is not configured." }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -45,11 +43,7 @@ Deno.serve(async (req: Request) => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          contents: [
-            {
-              parts: [{ text: prompt }],
-            },
-          ],
+          contents: [{ parts: [{ text: prompt }] }],
           generationConfig: {
             temperature: 0.7,
             topK: 40,
@@ -81,9 +75,7 @@ Deno.serve(async (req: Request) => {
       try {
         const parsed = JSON.parse(errBody);
         errMsg = parsed?.error?.message ?? errBody;
-      } catch {
-        // keep raw text
-      }
+      } catch { /* keep raw text */ }
 
       const status = geminiResponse.status;
       if (status === 429) {
@@ -98,7 +90,6 @@ Deno.serve(async (req: Request) => {
           { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-
       return new Response(
         JSON.stringify({ error: `Gemini API error (${status}): ${errMsg}` }),
         { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -106,7 +97,6 @@ Deno.serve(async (req: Request) => {
     }
 
     const geminiData = await geminiResponse.json();
-
     const text =
       geminiData?.candidates?.[0]?.content?.parts
         ?.map((p: { text?: string }) => p.text ?? "")

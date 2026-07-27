@@ -17,9 +17,7 @@ function DocsPage() {
   return (
     <div className="container mx-auto px-4 py-20">
       <h1 className="text-4xl font-bold mb-4">Documentation</h1>
-      <p className="text-muted-foreground mb-12 max-w-2xl">
-        Everything you need to know about using GrowthFlow AI to generate websites.
-      </p>
+      <p className="text-muted-foreground mb-12 max-w-2xl">Everything you need to know about using GrowthFlow AI to generate websites.</p>
       <div className="grid md:grid-cols-2 gap-6 max-w-4xl">
         {sections.map((s) => (
           <div key={s.title} className="rounded-xl border border-border bg-card p-6">

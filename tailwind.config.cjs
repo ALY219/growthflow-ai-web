@@ -4,12 +4,10 @@ module.exports = {
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
-    // Scan @blinkdotnew/ui so its Tailwind classes aren't purged
     "./node_modules/@blinkdotnew/ui/dist/index.mjs",
   ],
   theme: {
     extend: {
-      // ── Border radius — must match @blinkdotnew/ui's tailwind.config.ts ──
       borderRadius: {
         sm:   'var(--radius-sm)',
         md:   'var(--radius-md)',
@@ -18,8 +16,6 @@ module.exports = {
         full: 'var(--radius-full)',
         DEFAULT: 'var(--radius-md)',
       },
-
-      // ── Box shadows — must match @blinkdotnew/ui's tailwind.config.ts ────
       boxShadow: {
         sm:      'var(--shadow-sm)',
         DEFAULT: 'var(--shadow-md)',
@@ -28,16 +24,12 @@ module.exports = {
         xl:      'var(--shadow-xl)',
         card:    'var(--shadow-card)',
       },
-
-      // ── Font families — resolve to per-theme CSS vars ─────────────────────
       fontFamily: {
         sans:    'var(--font-sans)',
         heading: 'var(--font-heading)',
         mono:    'var(--font-mono)',
         serif:   ['Georgia', 'serif'],
       },
-
-      // ── Font sizes ─────────────────────────────────────────────────────────
       fontSize: {
         xs:   ['var(--font-size-xs)',   { lineHeight: 'var(--line-height-tight)' }],
         sm:   ['var(--font-size-sm)',   { lineHeight: 'var(--line-height-normal)' }],
@@ -46,8 +38,6 @@ module.exports = {
         xl:   ['var(--font-size-xl)',   { lineHeight: 'var(--line-height-heading)' }],
         '2xl':['var(--font-size-2xl)',  { lineHeight: 'var(--line-height-heading)' }],
       },
-
-      // ── Colors ─────────────────────────────────────────────────────────────
       colors: {
         border:     'hsl(var(--border))',
         input:      'hsl(var(--input))',
@@ -100,8 +90,6 @@ module.exports = {
           '5': 'hsl(var(--chart-5))',
         },
       },
-
-      // ── Transitions ────────────────────────────────────────────────────────
       transitionDuration: {
         fast:    'var(--duration-fast)',
         DEFAULT: 'var(--duration-normal)',
@@ -112,8 +100,6 @@ module.exports = {
         smooth:  'var(--easing-smooth)',
         bounce:  'var(--easing-bounce)',
       },
-
-      // ── Animations ─────────────────────────────────────────────────────────
       animation: {
         'fade-in':       'fade-in 0.5s ease-out',
         'slide-up':      'slide-up 0.5s ease-out',
