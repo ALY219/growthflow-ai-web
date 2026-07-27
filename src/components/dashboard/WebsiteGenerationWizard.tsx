@@ -1,1036 +1,595 @@
-import { useCallback, useRef, type Dispatch, type SetStateAction } from 'react'
+import { useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  Button,
-  Input,
-  Dialog,
-  DialogContent,
-  toast,
-} from '@blinkdotnew/ui'
-import {
-  Sparkles,
-  ChevronRight,
-  ChevronLeft,
+  ArrowLeft,
+  ArrowRight,
   Check,
-  ChevronDown,
-  Globe,
-  Store,
-  HeartPulse,
-  GraduationCap,
-  Banknote,
-  Briefcase,
-  UtensilsCrossed,
+  X,
+  Plus,
   Building2,
-  Ellipsis,
-  ShoppingCart,
-  TrendingUp,
-  FileText,
-  Layout,
-  Monitor,
-  Cloud,
-  Moon,
-  Sun,
-  SunMoon,
-  PaintBucket,
-  Palette,
-  Layers,
-  Star,
-  Zap,
-  Eye,
-  Minus,
-  MousePointerClick,
-  BookOpen,
-  HelpCircle,
-  MessageCircle,
-  Pen,
-  Mail,
-  Footprints,
   Users,
-  Code,
-  Lightbulb,
-  Rocket,
-  UserCheck,
-  Smile,
-  Gem,
-  Gamepad2,
-  BriefcaseBusiness,
-  Search,
-  ShieldCheck,
-  Smartphone,
-  Film,
-  Gauge,
-  Lock,
-  Database,
+  Palette,
+  Layout,
+  Zap,
+  CheckCircle2,
+  Save,
+  Sparkles,
 } from 'lucide-react'
-import type {
-  GenerationConfig,
-  WizardStep,
-  BusinessCategory,
-  WebsiteGoal,
-  ThemeMode,
-  PreferredStyle,
-  WebsiteSection,
-  TargetAudience,
-  Tone,
-  AdvancedOption,
-} from '@/lib/generation-types'
+import { Button, Input, Textarea } from '@blinkdotnew/ui'
 import {
-  BUSINESS_CATEGORY_LABELS,
+  type GenerationConfig,
+  type Industry,
+  type WebsiteGoal,
+  type CustomerType,
+  type DesignStyle,
+  type StandardPage,
+  type Feature,
+  type CustomPage,
+  INDUSTRY_LABELS,
   WEBSITE_GOAL_LABELS,
-  PREFERRED_STYLE_LABELS,
-  WEBSITE_SECTION_LABELS,
-  TARGET_AUDIENCE_LABELS,
-  TONE_LABELS,
-  ADVANCED_OPTION_LABELS,
-  STEP_LABELS,
-  TOTAL_STEPS,
+  CUSTOMER_TYPE_LABELS,
+  DESIGN_STYLE_LABELS,
+  STANDARD_PAGE_LABELS,
+  FEATURE_LABELS,
+  createDefaultConfig,
 } from '@/lib/generation-types'
+import { cn } from '@/lib/utils'
 
-/* ─────────────────────────────────────────────
-   Constants
-   ───────────────────────────────────────────── */
-
-const BUSINESS_CATEGORIES: BusinessCategory[] = [
-  'technology', 'ecommerce', 'healthcare', 'education',
-  'finance', 'portfolio', 'restaurant', 'agency', 'other',
-]
-
-const CATEGORY_ICONS: Record<BusinessCategory, typeof Globe> = {
-  technology: Code,
-  ecommerce: Store,
-  healthcare: HeartPulse,
-  education: GraduationCap,
-  finance: Banknote,
-  portfolio: Briefcase,
-  restaurant: UtensilsCrossed,
-  agency: Building2,
-  other: Ellipsis,
-}
-
-const WEBSITE_GOALS: WebsiteGoal[] = [
-  'sell-products', 'generate-leads', 'portfolio',
-  'landing-page', 'business-website', 'saas',
-]
-
-const GOAL_ICONS: Record<WebsiteGoal, typeof Globe> = {
-  'sell-products': ShoppingCart,
-  'generate-leads': TrendingUp,
-  portfolio: FileText,
-  'landing-page': Layout,
-  'business-website': Monitor,
-  saas: Cloud,
-}
-
-const THEME_OPTIONS: { value: ThemeMode; label: string; icon: typeof Moon }[] = [
-  { value: 'dark', label: 'Dark', icon: Moon },
-  { value: 'light', label: 'Light', icon: Sun },
-  { value: 'auto', label: 'Auto', icon: SunMoon },
-]
-
-const STYLE_OPTIONS: { value: PreferredStyle; icon: typeof Star }[] = [
-  { value: 'apple', icon: Star },
-  { value: 'stripe', icon: Layers },
-  { value: 'notion', icon: FileText },
-  { value: 'linear', icon: Zap },
-  { value: 'modern-startup', icon: Rocket },
-  { value: 'minimal', icon: Minus },
-  { value: 'bold', icon: Eye },
-  { value: 'elegant', icon: Gem },
-]
-
-const SECTION_OPTIONS: { value: WebsiteSection; icon: typeof Globe }[] = [
-  { value: 'hero', icon: Monitor },
-  { value: 'features', icon: Star },
-  { value: 'pricing', icon: Banknote },
-  { value: 'testimonials', icon: Smile },
-  { value: 'about', icon: BookOpen },
-  { value: 'faq', icon: HelpCircle },
-  { value: 'contact', icon: MessageCircle },
-  { value: 'blog', icon: Pen },
-  { value: 'newsletter', icon: Mail },
-  { value: 'footer', icon: Footprints },
-]
-
-const AUDIENCE_OPTIONS: { value: TargetAudience; icon: typeof Globe }[] = [
-  { value: 'students', icon: GraduationCap },
-  { value: 'businesses', icon: BriefcaseBusiness },
-  { value: 'developers', icon: Code },
-  { value: 'creators', icon: Lightbulb },
-  { value: 'startups', icon: Rocket },
-  { value: 'enterprise', icon: Building2 },
-  { value: 'other', icon: Ellipsis },
-]
-
-const TONE_OPTIONS: { value: Tone; icon: typeof Globe }[] = [
-  { value: 'professional', icon: BriefcaseBusiness },
-  { value: 'friendly', icon: Smile },
-  { value: 'luxury', icon: Gem },
-  { value: 'minimal', icon: Minus },
-  { value: 'playful', icon: Gamepad2 },
-  { value: 'corporate', icon: Building2 },
-]
-
-const ADVANCED_OPTIONS_LIST: { value: AdvancedOption; icon: typeof Globe }[] = [
-  { value: 'seo', icon: Search },
-  { value: 'accessibility', icon: ShieldCheck },
-  { value: 'responsive-design', icon: Smartphone },
-  { value: 'dark-mode', icon: Moon },
-  { value: 'animations', icon: Film },
-  { value: 'performance', icon: Gauge },
-  { value: 'auth-ready', icon: Lock },
-  { value: 'database-ready', icon: Database },
-]
-
-const PRESET_COLORS = [
-  '#3B82F6', '#8B5CF6', '#EC4899', '#EF4444',
-  '#F97316', '#EAB308', '#22C55E', '#14B8A6',
-  '#06B6D4', '#6366F1', '#A855F7', '#78716C',
-]
-
-const stepVariants = {
-  enter: { x: 60, opacity: 0 },
-  center: { x: 0, opacity: 1 },
-  exit: { x: -60, opacity: 0 },
-}
-
-/* ─────────────────────────────────────────────
-   Dropdown helper
-   ───────────────────────────────────────────── */
-
-function SelectDropdown({
-  open,
-  setOpen,
-  options,
-  selected,
-  onSelect,
-  labelMap,
-}: {
+interface WebsiteGenerationWizardProps {
   open: boolean
-  setOpen: (v: boolean) => void
-  options: string[]
-  selected: string
-  onSelect: (v: string) => void
-  labelMap: Record<string, string>
-}) {
+  config: GenerationConfig
+  onConfigChange: (config: GenerationConfig) => void
+  onSubmit: () => void
+  onCancel: () => void
+  pending?: boolean
+}
+
+const STEPS = [
+  { id: 0, label: 'Business', icon: Building2 },
+  { id: 1, label: 'Audience', icon: Users },
+  { id: 2, label: 'Style', icon: Palette },
+  { id: 3, label: 'Pages', icon: Layout },
+  { id: 4, label: 'Features', icon: Zap },
+  { id: 5, label: 'Review', icon: CheckCircle2 },
+] as const
+
+const INDUSTRIES = Object.keys(INDUSTRY_LABELS) as Industry[]
+const WEBSITE_GOALS = Object.keys(WEBSITE_GOAL_LABELS) as WebsiteGoal[]
+const CUSTOMER_TYPES = Object.keys(CUSTOMER_TYPE_LABELS) as CustomerType[]
+const DESIGN_STYLES = Object.keys(DESIGN_STYLE_LABELS) as DesignStyle[]
+const STANDARD_PAGES = Object.keys(STANDARD_PAGE_LABELS) as StandardPage[]
+const FEATURES = Object.keys(FEATURE_LABELS) as Feature[]
+
+const COUNTRIES = ['United States', 'Canada', 'United Kingdom', 'Australia', 'Germany', 'France', 'Japan', 'India', 'Brazil', 'Other']
+const BUSINESS_STAGES = ['Idea', 'Startup', 'Growing', 'Established', 'Enterprise']
+const AGE_GROUPS = ['18-24', '25-34', '35-44', '45-54', '55-64', '65+']
+
+const STYLE_GRADIENTS: Record<DesignStyle, string> = {
+  modern: 'from-blue-500 to-cyan-400',
+  minimal: 'from-gray-500 to-gray-300',
+  luxury: 'from-amber-600 to-yellow-400',
+  corporate: 'from-slate-600 to-slate-400',
+  startup: 'from-emerald-500 to-teal-400',
+  creative: 'from-pink-500 to-rose-400',
+  dark: 'from-gray-800 to-gray-600',
+  light: 'from-sky-200 to-blue-100',
+}
+
+export function WebsiteGenerationWizard({
+  open,
+  config,
+  onConfigChange,
+  onSubmit,
+  onCancel,
+  pending = false,
+}: WebsiteGenerationWizardProps) {
+  const [step, setStep] = useState(0)
+  const [saved, setSaved] = useState(false)
+
+  const update = useCallback((patch: Partial<GenerationConfig>) => {
+    onConfigChange({ ...config, ...patch })
+    setSaved(true)
+    setTimeout(() => setSaved(false), 1500)
+  }, [config, onConfigChange])
+
+  const togglePage = (page: StandardPage) => {
+    const has = config.selectedPages.includes(page)
+    update({
+      selectedPages: has
+        ? config.selectedPages.filter((p) => p !== page)
+        : [...config.selectedPages, page],
+    })
+  }
+
+  const toggleFeature = (feature: Feature) => {
+    const has = config.selectedFeatures.includes(feature)
+    update({
+      selectedFeatures: has
+        ? config.selectedFeatures.filter((f) => f !== feature)
+        : [...config.selectedFeatures, feature],
+    })
+  }
+
+  const addCustomPage = () => {
+    const newPage: CustomPage = { id: crypto.randomUUID(), name: 'New Page' }
+    update({ customPages: [...config.customPages, newPage] })
+  }
+
+  const removeCustomPage = (id: string) => {
+    update({ customPages: config.customPages.filter((p) => p.id !== id) })
+  }
+
+  const renameCustomPage = (id: string, name: string) => {
+    update({
+      customPages: config.customPages.map((p) => (p.id === id ? { ...p, name } : p)),
+    })
+  }
+
+  const canProceed = () => {
+    if (step === 0) return config.businessName.trim().length > 0
+    if (step === 1) return config.primaryAudience.trim().length > 0
+    return true
+  }
+
+  if (!open) return null
+
   return (
-    <div className="relative">
-      <button
-        type="button"
-        onClick={() => setOpen(!open)}
-        className="flex w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-2.5 text-sm shadow-sm transition-colors hover:border-muted-foreground/30 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        className="w-full max-w-3xl max-h-[90vh] overflow-hidden rounded-2xl border border-border bg-card shadow-xl flex flex-col"
       >
-        <span className={selected ? 'text-foreground' : 'text-muted-foreground'}>
-          {selected ? labelMap[selected] ?? selected : 'Select...'}
-        </span>
-        <ChevronDown className={`size-4 text-muted-foreground transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
-      </button>
-      {open && (
-        <>
-          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute z-20 mt-1 w-full rounded-md border border-border bg-card shadow-lg">
-            <div className="max-h-52 overflow-y-auto py-1">
-              {options.map((opt) => (
-                <button
-                  key={opt}
-                  type="button"
-                  onClick={() => { onSelect(opt); setOpen(false) }}
-                  className={`flex w-full items-center justify-between px-3 py-2 text-sm transition-colors hover:bg-muted ${
-                    selected === opt ? 'text-primary bg-primary/5' : 'text-foreground'
-                  }`}
-                >
-                  {labelMap[opt] ?? opt}
-                  {selected === opt && <Check className="size-3.5 text-primary" />}
-                </button>
-              ))}
-            </div>
+        {/* Header */}
+        <div className="border-b border-border px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg font-bold">Website Generation Wizard</h2>
+            {saved && (
+              <span className="inline-flex items-center gap-1 text-xs text-emerald-500 animate-fade-in">
+                <Save className="size-3" />
+                Saved
+              </span>
+            )}
           </div>
-        </>
-      )}
+          <button onClick={onCancel} className="text-muted-foreground hover:text-foreground transition-colors">
+            <X className="size-5" />
+          </button>
+        </div>
+
+        {/* Progress bar */}
+        <div className="px-6 py-3 border-b border-border">
+          <div className="flex items-center justify-between">
+            {STEPS.map((s, i) => (
+              <div key={s.id} className="flex items-center gap-2 flex-1 last:flex-none">
+                <button
+                  onClick={() => i < step && setStep(i)}
+                  className={cn(
+                    'flex items-center gap-2 text-xs font-medium transition-colors',
+                    i === step ? 'text-primary' : i < step ? 'text-emerald-500 cursor-pointer' : 'text-muted-foreground',
+                  )}
+                >
+                  <div
+                    className={cn(
+                      'flex size-7 items-center justify-center rounded-full text-xs font-bold transition-colors',
+                      i === step
+                        ? 'bg-primary text-primary-foreground'
+                        : i < step
+                          ? 'bg-emerald-500/20 text-emerald-500'
+                          : 'bg-muted text-muted-foreground',
+                    )}
+                  >
+                    {i < step ? <Check className="size-3.5" /> : i + 1}
+                  </div>
+                  <span className="hidden sm:inline">{s.label}</span>
+                </button>
+                {i < STEPS.length - 1 && (
+                  <div className={cn('h-px flex-1 mx-1 transition-colors', i < step ? 'bg-emerald-500/40' : 'bg-border')} />
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto p-6">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={step}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.2 }}
+            >
+              {/* Step 0: Business Info */}
+              {step === 0 && (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Business Information</h3>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Business Name *</label>
+                    <Input
+                      value={config.businessName}
+                      onChange={(e) => update({ businessName: e.target.value })}
+                      placeholder="Acme Inc."
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Tagline</label>
+                    <Input
+                      value={config.tagline}
+                      onChange={(e) => update({ tagline: e.target.value })}
+                      placeholder="Building the future, today"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Description</label>
+                    <Textarea
+                      value={config.description}
+                      onChange={(e) => update({ description: e.target.value })}
+                      placeholder="Tell us about your business..."
+                      rows={3}
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Industry</label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {INDUSTRIES.map((ind) => (
+                          <button
+                            key={ind}
+                            onClick={() => update({ industry: ind })}
+                            className={cn(
+                              'rounded-lg border px-2 py-2 text-xs font-medium transition-colors text-center',
+                              config.industry === ind
+                                ? 'border-primary bg-primary/10 text-primary'
+                                : 'border-border hover:bg-accent',
+                            )}
+                          >
+                            {INDUSTRY_LABELS[ind]}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Country</label>
+                      <select
+                        value={config.country}
+                        onChange={(e) => update({ country: e.target.value })}
+                        className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
+                      >
+                        {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                      <label className="text-sm font-medium mt-3 block">Website Goal</label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {WEBSITE_GOALS.map((g) => (
+                          <button
+                            key={g}
+                            onClick={() => update({ websiteGoal: g })}
+                            className={cn(
+                              'rounded-lg border px-2 py-2 text-xs font-medium transition-colors text-center',
+                              config.websiteGoal === g
+                                ? 'border-primary bg-primary/10 text-primary'
+                                : 'border-border hover:bg-accent',
+                            )}
+                          >
+                            {WEBSITE_GOAL_LABELS[g]}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 1: Target Audience */}
+              {step === 1 && (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Target Audience</h3>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Primary Audience *</label>
+                    <Input
+                      value={config.primaryAudience}
+                      onChange={(e) => update({ primaryAudience: e.target.value })}
+                      placeholder="Small business owners looking for..."
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Customer Type</label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {CUSTOMER_TYPES.map((c) => (
+                        <button
+                          key={c}
+                          onClick={() => update({ customerType: c })}
+                          className={cn(
+                            'rounded-lg border px-2 py-2 text-xs font-medium transition-colors text-center',
+                            config.customerType === c
+                              ? 'border-primary bg-primary/10 text-primary'
+                              : 'border-border hover:bg-accent',
+                          )}
+                        >
+                          {CUSTOMER_TYPE_LABELS[c]}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Business Stage</label>
+                      <select
+                        value={config.businessStage}
+                        onChange={(e) => update({ businessStage: e.target.value })}
+                        className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
+                      >
+                        {BUSINESS_STAGES.map((s) => <option key={s} value={s}>{s}</option>)}
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Age Group</label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {AGE_GROUPS.map((a) => (
+                          <button
+                            key={a}
+                            onClick={() => update({ ageGroup: a })}
+                            className={cn(
+                              'rounded-lg border px-2 py-2 text-xs font-medium transition-colors text-center',
+                              config.ageGroup === a
+                                ? 'border-primary bg-primary/10 text-primary'
+                                : 'border-border hover:bg-accent',
+                            )}
+                          >
+                            {a}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 2: Design Style */}
+              {step === 2 && (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Website Style</h3>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Design Style</label>
+                    <div className="grid grid-cols-4 gap-2">
+                      {DESIGN_STYLES.map((style) => (
+                        <button
+                          key={style}
+                          onClick={() => update({ designStyle: style })}
+                          className={cn(
+                            'rounded-lg border overflow-hidden transition-all',
+                            config.designStyle === style
+                              ? 'border-primary ring-2 ring-primary/20'
+                              : 'border-border hover:border-primary/50',
+                          )}
+                        >
+                          <div className={cn('h-12 bg-gradient-to-br', STYLE_GRADIENTS[style])} />
+                          <p className="text-xs font-medium py-1.5 text-center">{DESIGN_STYLE_LABELS[style]}</p>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Brand Colors</label>
+                    <div className="grid grid-cols-3 gap-4">
+                      {(['primary', 'secondary', 'accent'] as const).map((key) => (
+                        <div key={key} className="space-y-1.5">
+                          <span className="text-xs text-muted-foreground capitalize">{key}</span>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="color"
+                              value={config.brandColors[key]}
+                              onChange={(e) => update({ brandColors: { ...config.brandColors, [key]: e.target.value } })}
+                              className="size-9 rounded-lg border border-border cursor-pointer"
+                            />
+                            <Input
+                              value={config.brandColors[key]}
+                              onChange={(e) => update({ brandColors: { ...config.brandColors, [key]: e.target.value } })}
+                              className="flex-1 text-xs font-mono"
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 3: Pages */}
+              {step === 3 && (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Website Structure</h3>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Pages</label>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {STANDARD_PAGES.map((page) => (
+                        <button
+                          key={page}
+                          onClick={() => togglePage(page)}
+                          className={cn(
+                            'flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors',
+                            config.selectedPages.includes(page)
+                              ? 'border-primary bg-primary/10 text-primary'
+                              : 'border-border hover:bg-accent',
+                          )}
+                        >
+                          <div className={cn(
+                            'flex size-4 items-center justify-center rounded border',
+                            config.selectedPages.includes(page) ? 'bg-primary border-primary' : 'border-border',
+                          )}>
+                            {config.selectedPages.includes(page) && <Check className="size-3 text-primary-foreground" />}
+                          </div>
+                          {STANDARD_PAGE_LABELS[page]}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm font-medium">Custom Pages</label>
+                      <Button variant="ghost" size="sm" onClick={addCustomPage} className="gap-1.5">
+                        <Plus className="size-3.5" />
+                        Add
+                      </Button>
+                    </div>
+                    {config.customPages.length === 0 ? (
+                      <p className="text-xs text-muted-foreground py-2">No custom pages added.</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {config.customPages.map((p) => (
+                          <div key={p.id} className="flex items-center gap-2">
+                            <Input
+                              value={p.name}
+                              onChange={(e) => renameCustomPage(p.id, e.target.value)}
+                              className="flex-1"
+                            />
+                            <Button variant="ghost" size="sm" onClick={() => removeCustomPage(p.id)}>
+                              <X className="size-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Step 4: Features */}
+              {step === 4 && (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Features</h3>
+                  <p className="text-sm text-muted-foreground">Select the features you want on your website.</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {FEATURES.map((feature) => (
+                      <button
+                        key={feature}
+                        onClick={() => toggleFeature(feature)}
+                        className={cn(
+                          'flex items-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors text-left',
+                          config.selectedFeatures.includes(feature)
+                            ? 'border-primary bg-primary/10 text-primary'
+                            : 'border-border hover:bg-accent',
+                        )}
+                      >
+                        <div className={cn(
+                          'flex size-4 items-center justify-center rounded border shrink-0',
+                          config.selectedFeatures.includes(feature) ? 'bg-primary border-primary' : 'border-border',
+                        )}>
+                          {config.selectedFeatures.includes(feature) && <Check className="size-3 text-primary-foreground" />}
+                        </div>
+                        {FEATURE_LABELS[feature]}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Step 5: Review */}
+              {step === 5 && (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Review & Generate</h3>
+                  <div className="space-y-3">
+                    <ReviewGroup title="Business">
+                      <ReviewItem label="Name" value={config.businessName} />
+                      <ReviewItem label="Tagline" value={config.tagline} />
+                      <ReviewItem label="Industry" value={INDUSTRY_LABELS[config.industry]} />
+                      <ReviewItem label="Goal" value={WEBSITE_GOAL_LABELS[config.websiteGoal]} />
+                    </ReviewGroup>
+                    <ReviewGroup title="Audience">
+                      <ReviewItem label="Primary" value={config.primaryAudience} />
+                      <ReviewItem label="Type" value={CUSTOMER_TYPE_LABELS[config.customerType]} />
+                      <ReviewItem label="Stage" value={config.businessStage} />
+                    </ReviewGroup>
+                    <ReviewGroup title="Design">
+                      <ReviewItem label="Style" value={DESIGN_STYLE_LABELS[config.designStyle]} />
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground w-20">Colors</span>
+                        <div className="flex gap-1.5">
+                          <div className="size-5 rounded border border-border" style={{ backgroundColor: config.brandColors.primary }} />
+                          <div className="size-5 rounded border border-border" style={{ backgroundColor: config.brandColors.secondary }} />
+                          <div className="size-5 rounded border border-border" style={{ backgroundColor: config.brandColors.accent }} />
+                        </div>
+                      </div>
+                    </ReviewGroup>
+                    <ReviewGroup title="Pages">
+                      <div className="flex flex-wrap gap-1.5">
+                        {config.selectedPages.map((p) => (
+                          <span key={p} className="rounded-full bg-accent px-2.5 py-0.5 text-xs font-medium">
+                            {STANDARD_PAGE_LABELS[p]}
+                          </span>
+                        ))}
+                        {config.customPages.map((p) => (
+                          <span key={p.id} className="rounded-full bg-accent px-2.5 py-0.5 text-xs font-medium">
+                            {p.name}
+                          </span>
+                        ))}
+                      </div>
+                    </ReviewGroup>
+                    <ReviewGroup title="Features">
+                      <div className="flex flex-wrap gap-1.5">
+                        {config.selectedFeatures.length === 0 ? (
+                          <span className="text-xs text-muted-foreground">None selected</span>
+                        ) : (
+                          config.selectedFeatures.map((f) => (
+                            <span key={f} className="rounded-full bg-accent px-2.5 py-0.5 text-xs font-medium">
+                              {FEATURE_LABELS[f]}
+                            </span>
+                          ))
+                        )}
+                      </div>
+                    </ReviewGroup>
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        {/* Footer */}
+        <div className="border-t border-border px-6 py-4 flex items-center justify-between">
+          <Button variant="ghost" onClick={onCancel} disabled={pending}>
+            Cancel
+          </Button>
+          <div className="flex gap-2">
+            {step > 0 && (
+              <Button variant="outline" onClick={() => setStep(step - 1)} disabled={pending} className="gap-1.5">
+                <ArrowLeft className="size-4" />
+                Back
+              </Button>
+            )}
+            {step < STEPS.length - 1 ? (
+              <Button onClick={() => setStep(step + 1)} disabled={!canProceed()} className="gap-1.5">
+                Continue
+                <ArrowRight className="size-4" />
+              </Button>
+            ) : (
+              <Button onClick={onSubmit} disabled={pending} className="gap-1.5">
+                {pending ? 'Generating...' : 'Generate Website'}
+                <Sparkles className="size-4" />
+              </Button>
+            )}
+          </div>
+        </div>
+      </motion.div>
     </div>
   )
 }
 
-/* ─────────────────────────────────────────────
-   Props
-   ───────────────────────────────────────────── */
-
-export interface WebsiteGenerationWizardProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  config: GenerationConfig
-  setConfig: Dispatch<SetStateAction<GenerationConfig>>
-  step: WizardStep
-  setStep: Dispatch<SetStateAction<WizardStep>>
-  onSubmit: () => void
-  isPending: boolean
-  /** Render as full-screen overlay instead of a dialog. Default: false */
-  variant?: 'dialog' | 'fullscreen'
-}
-
-/* ─────────────────────────────────────────────
-   Component
-   ───────────────────────────────────────────── */
-
-export function WebsiteGenerationWizard({
-  open,
-  onOpenChange,
-  config,
-  setConfig,
-  step,
-  setStep,
-  onSubmit,
-  isPending,
-  variant = 'dialog',
-}: WebsiteGenerationWizardProps) {
-  const updateConfig = useCallback(
-    (patch: Partial<GenerationConfig>) =>
-      setConfig((prev) => ({ ...prev, ...patch })),
-    [setConfig],
-  )
-
-  // ── Dropdown open states ──
-  const catRef = useRef(false)
-  const goalRef = useRef(false)
-
-  function closeAll() {
-    catRef.current = false
-    goalRef.current = false
-  }
-
-  // ── Step validators ──
-  const canProceedStep1 = config.businessName.trim().length > 0 && config.businessCategory !== '' && config.websiteGoal !== ''
-  const canProceedStep2 = config.preferredStyle !== ''
-  const canProceedStep3 = config.sections.length > 0
-  const canProceedStep4 = config.targetAudiences.length > 0 && config.tone !== ''
-  // Step 5 always proceeds (advanced options optional)
-
-  const canProceed: Record<WizardStep, boolean> = {
-    1: canProceedStep1,
-    2: canProceedStep2,
-    3: canProceedStep3,
-    4: canProceedStep4,
-    5: true,
-    6: !isPending,
-  }
-
-  const progressDots = Array.from({ length: TOTAL_STEPS }, (_, i) => (i + 1) as WizardStep)
-
-  /* ── HANDLERS ── */
-  function handleNext() {
-    if (step < TOTAL_STEPS) setStep((step + 1) as WizardStep)
-  }
-
-  function handleBack() {
-    if (step > 1) setStep((step - 1) as WizardStep)
-  }
-
-  function handleOpenChange(next: boolean) {
-    if (!next) closeAll()
-    onOpenChange(next)
-  }
-
-  /* ── Shared content ── */
-  const wizardContent = (
-    <>
-      {/* ── Header ── */}
-      <div className="text-center space-y-1.5">
-        <h2 className="text-lg font-bold text-foreground">Generate Website</h2>
-        <p className="text-sm text-muted-foreground">
-          Step {step} of {TOTAL_STEPS} — {STEP_LABELS[step]}
-        </p>
-      </div>
-
-      {/* ── Progress dots ── */}
-      <div className="flex items-center justify-center gap-2 pt-1 pb-2">
-        {progressDots.map((dot) => (
-          <div
-            key={dot}
-            className={`size-2 rounded-full transition-colors duration-300 ${
-              dot <= step ? 'bg-primary' : 'bg-muted'
-            }`}
-          />
-        ))}
-      </div>
-
-      {/* ── Step content ── */}
-      <div className="relative overflow-hidden flex-1" style={{ minHeight: variant === 'fullscreen' ? 400 : 340 }}>
-        <AnimatePresence mode="wait" initial={false}>
-          {step === 1 && (
-            <Step1
-              key="s1"
-              config={config}
-              updateConfig={updateConfig}
-              catOpen={catRef}
-              goalOpen={goalRef}
-            />
-          )}
-          {step === 2 && (
-            <Step2 key="s2" config={config} updateConfig={updateConfig} />
-          )}
-          {step === 3 && (
-            <Step3 key="s3" config={config} updateConfig={updateConfig} />
-          )}
-          {step === 4 && (
-            <Step4 key="s4" config={config} updateConfig={updateConfig} />
-          )}
-          {step === 5 && (
-            <Step5 key="s5" config={config} updateConfig={updateConfig} />
-          )}
-          {step === 6 && (
-            <Step6 key="s6" config={config} />
-          )}
-        </AnimatePresence>
-      </div>
-
-      {/* ── Footer ── */}
-      <div className="flex items-center justify-between pt-2">
-        <Button
-          variant="outline"
-          onClick={step === 1 ? () => handleOpenChange(false) : handleBack}
-          className="gap-2"
-        >
-          <ChevronLeft className="size-4" />
-          {step === 1 ? 'Cancel' : 'Back'}
-        </Button>
-
-        {step < TOTAL_STEPS ? (
-          <Button
-            onClick={handleNext}
-            disabled={!canProceed[step]}
-            className="gap-2"
-          >
-            Continue
-            <ChevronRight className="size-4" />
-          </Button>
-        ) : (
-          <Button
-            onClick={onSubmit}
-            disabled={!canProceed[6]}
-            className="gap-2"
-          >
-            <Sparkles className="size-4" />
-            {isPending ? 'Generating...' : 'Generate Website'}
-          </Button>
-        )}
-      </div>
-    </>
-  )
-
-  /* ── Fullscreen variant ── */
-  if (variant === 'fullscreen') {
-    return (
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            className="fixed inset-0 z-50 flex flex-col bg-background"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-          >
-            {/* Close button (top-right) */}
-            <div className="absolute top-4 right-4 z-10">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => handleOpenChange(false)}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                ✕
-              </Button>
-            </div>
-
-            <div className="flex-1 max-w-2xl w-full mx-auto px-4 py-8 flex flex-col justify-center">
-              {wizardContent}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    )
-  }
-
-  /* ── Dialog variant (default) ── */
+function ReviewGroup({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-xl lg:max-w-2xl">
-        {wizardContent}
-      </DialogContent>
-    </Dialog>
-  )
-}
-
-/* ─────────────────────────────────────────────
-   Step 1: Business Information
-   ───────────────────────────────────────────── */
-
-function Step1({
-  config,
-  updateConfig,
-  catOpen,
-  goalOpen,
-}: {
-  config: GenerationConfig
-  updateConfig: (patch: Partial<GenerationConfig>) => void
-  catOpen: React.MutableRefObject<boolean>
-  goalOpen: React.MutableRefObject<boolean>
-}) {
-  return (
-    <motion.div
-      variants={stepVariants} initial="enter" animate="center" exit="exit"
-      transition={{ duration: 0.25, ease: 'easeOut' }}
-      className="space-y-5"
-    >
-      {/* Business Name */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-foreground">
-          Business Name <span className="text-destructive">*</span>
-        </label>
-        <Input
-          placeholder="e.g. Acme Corp"
-          value={config.businessName}
-          onChange={(e) => updateConfig({ businessName: e.target.value })}
-          autoFocus
-        />
-      </div>
-
-      {/* Business Description */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-foreground">
-          Business Description
-        </label>
-        <textarea
-          className="flex w-full min-h-[80px] rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none"
-          placeholder="What does your business do?"
-          value={config.businessDescription}
-          onChange={(e) => updateConfig({ businessDescription: e.target.value })}
-          rows={3}
-        />
-      </div>
-
-      {/* Business Category */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-foreground">
-          Business Category <span className="text-destructive">*</span>
-        </label>
-        <div className="grid grid-cols-3 gap-2">
-          {BUSINESS_CATEGORIES.map((cat) => {
-            const Icon = CATEGORY_ICONS[cat]
-            const isSelected = config.businessCategory === cat
-            return (
-              <button
-                key={cat}
-                type="button"
-                onClick={() => updateConfig({ businessCategory: cat })}
-                className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border text-sm font-medium transition-all duration-200 ${
-                  isSelected
-                    ? 'border-primary bg-primary/10 text-primary shadow-sm shadow-primary/10'
-                    : 'border-border bg-card text-muted-foreground hover:border-muted-foreground/30 hover:text-foreground hover:scale-[1.02]'
-                }`}
-              >
-                <Icon className={`size-4 shrink-0 ${isSelected ? 'text-primary' : ''}`} />
-                <span className="truncate">{BUSINESS_CATEGORY_LABELS[cat]}</span>
-              </button>
-            )
-          })}
-        </div>
-      </div>
-
-      {/* Website Goal */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-foreground">
-          Website Goal <span className="text-destructive">*</span>
-        </label>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-          {WEBSITE_GOALS.map((goal) => {
-            const Icon = GOAL_ICONS[goal]
-            const isSelected = config.websiteGoal === goal
-            return (
-              <button
-                key={goal}
-                type="button"
-                onClick={() => updateConfig({ websiteGoal: goal })}
-                className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border text-sm font-medium transition-all duration-200 ${
-                  isSelected
-                    ? 'border-primary bg-primary/10 text-primary shadow-sm shadow-primary/10'
-                    : 'border-border bg-card text-muted-foreground hover:border-muted-foreground/30 hover:text-foreground hover:scale-[1.02]'
-                }`}
-              >
-                <Icon className={`size-4 shrink-0 ${isSelected ? 'text-primary' : ''}`} />
-                <span className="truncate">{WEBSITE_GOAL_LABELS[goal]}</span>
-              </button>
-            )
-          })}
-        </div>
-      </div>
-    </motion.div>
-  )
-}
-
-/* ─────────────────────────────────────────────
-   Step 2: Brand Identity
-   ───────────────────────────────────────────── */
-
-function Step2({
-  config,
-  updateConfig,
-}: {
-  config: GenerationConfig
-  updateConfig: (patch: Partial<GenerationConfig>) => void
-}) {
-  return (
-    <motion.div
-      variants={stepVariants} initial="enter" animate="center" exit="exit"
-      transition={{ duration: 0.25, ease: 'easeOut' }}
-      className="space-y-5"
-    >
-      {/* Theme */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-foreground">Theme</label>
-        <div className="grid grid-cols-3 gap-2">
-          {THEME_OPTIONS.map((opt) => {
-            const Icon = opt.icon
-            const isSelected = config.theme === opt.value
-            return (
-              <button
-                key={opt.value}
-                type="button"
-                onClick={() => updateConfig({ theme: opt.value })}
-                className={`flex flex-col items-center gap-2 px-4 py-4 rounded-lg border text-sm font-medium transition-all duration-200 ${
-                  isSelected
-                    ? 'border-primary bg-primary/10 text-primary shadow-sm shadow-primary/10'
-                    : 'border-border bg-card text-muted-foreground hover:border-muted-foreground/30 hover:text-foreground hover:scale-[1.02]'
-                }`}
-              >
-                <Icon className={`size-5 shrink-0 ${isSelected ? 'text-primary' : ''}`} />
-                {opt.label}
-              </button>
-            )
-          })}
-        </div>
-      </div>
-
-      {/* Primary Color */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-foreground flex items-center gap-1.5">
-          <PaintBucket className="size-3.5" />
-          Primary Color
-        </label>
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <input
-              type="color"
-              value={config.primaryColor}
-              onChange={(e) => updateConfig({ primaryColor: e.target.value })}
-              className="absolute inset-0 opacity-0 cursor-pointer"
-            />
-            <div
-              className="size-9 rounded-lg border-2 border-border shadow-sm cursor-pointer"
-              style={{ backgroundColor: config.primaryColor }}
-            />
-          </div>
-          <div className="flex items-center gap-1.5 flex-wrap">
-            {PRESET_COLORS.map((color) => (
-              <button
-                key={color}
-                type="button"
-                onClick={() => updateConfig({ primaryColor: color })}
-                className={`size-6 rounded-full border-2 transition-transform hover:scale-110 ${
-                  config.primaryColor === color
-                    ? 'border-foreground scale-110'
-                    : 'border-transparent'
-                }`}
-                style={{ backgroundColor: color }}
-              />
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Accent Color */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-foreground flex items-center gap-1.5">
-          <Palette className="size-3.5" />
-          Accent Color
-        </label>
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <input
-              type="color"
-              value={config.accentColor}
-              onChange={(e) => updateConfig({ accentColor: e.target.value })}
-              className="absolute inset-0 opacity-0 cursor-pointer"
-            />
-            <div
-              className="size-9 rounded-lg border-2 border-border shadow-sm cursor-pointer"
-              style={{ backgroundColor: config.accentColor }}
-            />
-          </div>
-          <div className="flex items-center gap-1.5 flex-wrap">
-            {PRESET_COLORS.map((color) => (
-              <button
-                key={color}
-                type="button"
-                onClick={() => updateConfig({ accentColor: color })}
-                className={`size-6 rounded-full border-2 transition-transform hover:scale-110 ${
-                  config.accentColor === color
-                    ? 'border-foreground scale-110'
-                    : 'border-transparent'
-                }`}
-                style={{ backgroundColor: color }}
-              />
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Preferred Style */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-foreground">
-          Preferred Style <span className="text-destructive">*</span>
-        </label>
-        <div className="grid grid-cols-4 gap-2">
-          {STYLE_OPTIONS.map((opt) => {
-            const Icon = opt.icon
-            const isSelected = config.preferredStyle === opt.value
-            return (
-              <button
-                key={opt.value}
-                type="button"
-                onClick={() => updateConfig({ preferredStyle: opt.value })}
-                className={`flex flex-col items-center gap-2 px-3 py-3 rounded-lg border text-xs font-medium transition-all duration-200 ${
-                  isSelected
-                    ? 'border-primary bg-primary/10 text-primary shadow-sm shadow-primary/10'
-                    : 'border-border bg-card text-muted-foreground hover:border-muted-foreground/30 hover:text-foreground hover:scale-[1.02]'
-                }`}
-              >
-                <Icon className={`size-5 shrink-0 ${isSelected ? 'text-primary' : ''}`} />
-                {PREFERRED_STYLE_LABELS[opt.value]}
-              </button>
-            )
-          })}
-        </div>
-      </div>
-    </motion.div>
-  )
-}
-
-/* ─────────────────────────────────────────────
-   Step 3: Website Structure
-   ───────────────────────────────────────────── */
-
-function Step3({
-  config,
-  updateConfig,
-}: {
-  config: GenerationConfig
-  updateConfig: (patch: Partial<GenerationConfig>) => void
-}) {
-  const toggleSection = (section: WebsiteSection) => {
-    const next = config.sections.includes(section)
-      ? config.sections.filter((s) => s !== section)
-      : [...config.sections, section]
-    updateConfig({ sections: next })
-  }
-
-  return (
-    <motion.div
-      variants={stepVariants} initial="enter" animate="center" exit="exit"
-      transition={{ duration: 0.25, ease: 'easeOut' }}
-      className="space-y-4"
-    >
-      <p className="text-sm text-muted-foreground">
-        Select sections to include in your website
-        <span className="text-destructive">*</span>
-      </p>
-      <div className="grid grid-cols-2 gap-2">
-        {SECTION_OPTIONS.map((opt) => {
-          const Icon = opt.icon
-          const isSelected = config.sections.includes(opt.value)
-          return (
-            <button
-              key={opt.value}
-              type="button"
-              onClick={() => toggleSection(opt.value)}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg border text-sm font-medium transition-all duration-200 ${
-                isSelected
-                  ? 'border-primary bg-primary/10 text-primary shadow-sm shadow-primary/10'
-                  : 'border-border bg-card text-muted-foreground hover:border-muted-foreground/30 hover:text-foreground hover:scale-[1.02]'
-              }`}
-            >
-              <Icon className={`size-4 shrink-0 ${isSelected ? 'text-primary' : ''}`} />
-              <span>{WEBSITE_SECTION_LABELS[opt.value]}</span>
-              {isSelected && <Check className="size-3.5 text-primary ml-auto" />}
-            </button>
-          )
-        })}
-      </div>
-      {config.sections.length > 0 && (
-        <p className="text-xs text-muted-foreground">
-          {config.sections.length} section{config.sections.length !== 1 ? 's' : ''} selected
-        </p>
-      )}
-    </motion.div>
-  )
-}
-
-/* ─────────────────────────────────────────────
-   Step 4: Target Audience
-   ───────────────────────────────────────────── */
-
-function Step4({
-  config,
-  updateConfig,
-}: {
-  config: GenerationConfig
-  updateConfig: (patch: Partial<GenerationConfig>) => void
-}) {
-  const toggleAudience = (audience: TargetAudience) => {
-    const next = config.targetAudiences.includes(audience)
-      ? config.targetAudiences.filter((a) => a !== audience)
-      : [...config.targetAudiences, audience]
-    updateConfig({ targetAudiences: next })
-  }
-
-  return (
-    <motion.div
-      variants={stepVariants} initial="enter" animate="center" exit="exit"
-      transition={{ duration: 0.25, ease: 'easeOut' }}
-      className="space-y-5"
-    >
-      {/* Target Audience */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-foreground">
-          Target Audience <span className="text-destructive">*</span>
-        </label>
-        <div className="grid grid-cols-2 gap-2">
-          {AUDIENCE_OPTIONS.map((opt) => {
-            const Icon = opt.icon
-            const isSelected = config.targetAudiences.includes(opt.value)
-            return (
-              <button
-                key={opt.value}
-                type="button"
-                onClick={() => toggleAudience(opt.value)}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg border text-sm font-medium transition-all duration-200 ${
-                  isSelected
-                    ? 'border-primary bg-primary/10 text-primary shadow-sm shadow-primary/10'
-                    : 'border-border bg-card text-muted-foreground hover:border-muted-foreground/30 hover:text-foreground hover:scale-[1.02]'
-                }`}
-              >
-                <Icon className={`size-4 shrink-0 ${isSelected ? 'text-primary' : ''}`} />
-                <span>{TARGET_AUDIENCE_LABELS[opt.value]}</span>
-                {isSelected && <Check className="size-3.5 text-primary ml-auto" />}
-              </button>
-            )
-          })}
-        </div>
-      </div>
-
-      {/* Tone */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-foreground">
-          Tone <span className="text-destructive">*</span>
-        </label>
-        <div className="grid grid-cols-3 gap-2">
-          {TONE_OPTIONS.map((opt) => {
-            const Icon = opt.icon
-            const isSelected = config.tone === opt.value
-            return (
-              <button
-                key={opt.value}
-                type="button"
-                onClick={() => updateConfig({ tone: opt.value })}
-                className={`flex flex-col items-center gap-2 px-3 py-3 rounded-lg border text-xs font-medium transition-all duration-200 ${
-                  isSelected
-                    ? 'border-primary bg-primary/10 text-primary shadow-sm shadow-primary/10'
-                    : 'border-border bg-card text-muted-foreground hover:border-muted-foreground/30 hover:text-foreground hover:scale-[1.02]'
-                }`}
-              >
-                <Icon className={`size-5 shrink-0 ${isSelected ? 'text-primary' : ''}`} />
-                {TONE_LABELS[opt.value]}
-              </button>
-            )
-          })}
-        </div>
-      </div>
-    </motion.div>
-  )
-}
-
-/* ─────────────────────────────────────────────
-   Step 5: Advanced Options
-   ───────────────────────────────────────────── */
-
-function Step5({
-  config,
-  updateConfig,
-}: {
-  config: GenerationConfig
-  updateConfig: (patch: Partial<GenerationConfig>) => void
-}) {
-  const toggleOption = (opt: AdvancedOption) => {
-    const next = config.advancedOptions.includes(opt)
-      ? config.advancedOptions.filter((o) => o !== opt)
-      : [...config.advancedOptions, opt]
-    updateConfig({ advancedOptions: next })
-  }
-
-  return (
-    <motion.div
-      variants={stepVariants} initial="enter" animate="center" exit="exit"
-      transition={{ duration: 0.25, ease: 'easeOut' }}
-      className="space-y-4"
-    >
-      <p className="text-sm text-muted-foreground">
-        Enable advanced features for your website
-      </p>
-      <div className="grid grid-cols-2 gap-2">
-        {ADVANCED_OPTIONS_LIST.map((opt) => {
-          const Icon = opt.icon
-          const isSelected = config.advancedOptions.includes(opt.value)
-          return (
-            <button
-              key={opt.value}
-              type="button"
-              onClick={() => toggleOption(opt.value)}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg border text-sm font-medium transition-all duration-200 ${
-                isSelected
-                  ? 'border-primary bg-primary/10 text-primary shadow-sm shadow-primary/10'
-                  : 'border-border bg-card text-muted-foreground hover:border-muted-foreground/30 hover:text-foreground hover:scale-[1.02]'
-              }`}
-            >
-              <Icon className={`size-4 shrink-0 ${isSelected ? 'text-primary' : ''}`} />
-              <span>{ADVANCED_OPTION_LABELS[opt.value]}</span>
-              {isSelected && <Check className="size-3.5 text-primary ml-auto" />}
-            </button>
-          )
-        })}
-      </div>
-    </motion.div>
-  )
-}
-
-/* ─────────────────────────────────────────────
-   Step 6: Review
-   ───────────────────────────────────────────── */
-
-function Step6({ config }: { config: GenerationConfig }) {
-  return (
-    <motion.div
-      variants={stepVariants} initial="enter" animate="center" exit="exit"
-      transition={{ duration: 0.25, ease: 'easeOut' }}
-      className="space-y-5"
-    >
-      <div className="rounded-xl border border-border bg-card/60 p-5 space-y-5">
-        {/* Header */}
-        <div className="flex items-center gap-2 pb-2 border-b border-border">
-          <Sparkles className="size-4 text-primary" />
-          <h3 className="text-sm font-semibold text-foreground">Generation Summary</h3>
-        </div>
-
-        {/* Business */}
-        <SectionBlock title="Business">
-          <ReviewRow label="Name" value={config.businessName} />
-          {config.businessDescription && (
-            <ReviewRow label="Description" value={config.businessDescription} />
-          )}
-          <ReviewRow
-            label="Category"
-            value={BUSINESS_CATEGORY_LABELS[config.businessCategory as BusinessCategory] ?? '—'}
-          />
-          <ReviewRow
-            label="Goal"
-            value={WEBSITE_GOAL_LABELS[config.websiteGoal as WebsiteGoal] ?? '—'}
-          />
-        </SectionBlock>
-
-        {/* Design */}
-        <SectionBlock title="Design">
-          <ReviewRow label="Theme" value={config.theme.charAt(0).toUpperCase() + config.theme.slice(1)} />
-          <ReviewRow
-            label="Primary Color"
-            value={
-              <span className="inline-flex items-center gap-1.5">
-                <span className="size-3.5 rounded-full border border-border inline-block" style={{ backgroundColor: config.primaryColor }} />
-                {config.primaryColor}
-              </span>
-            }
-          />
-          <ReviewRow
-            label="Accent Color"
-            value={
-              <span className="inline-flex items-center gap-1.5">
-                <span className="size-3.5 rounded-full border border-border inline-block" style={{ backgroundColor: config.accentColor }} />
-                {config.accentColor}
-              </span>
-            }
-          />
-          <ReviewRow
-            label="Style"
-            value={PREFERRED_STYLE_LABELS[config.preferredStyle as PreferredStyle] ?? '—'}
-          />
-        </SectionBlock>
-
-        {/* Audience */}
-        <SectionBlock title="Audience">
-          <ReviewRow
-            label="Target"
-            value={config.targetAudiences.map((a) => TARGET_AUDIENCE_LABELS[a]).join(', ') || '—'}
-          />
-          <ReviewRow
-            label="Tone"
-            value={TONE_LABELS[config.tone as Tone] ?? '—'}
-          />
-        </SectionBlock>
-
-        {/* Sections */}
-        <SectionBlock title="Website Sections">
-          <ReviewRow
-            label="Sections"
-            value={
-              config.sections.length > 0
-                ? config.sections.map((s) => WEBSITE_SECTION_LABELS[s]).join(', ')
-                : '—'
-            }
-          />
-        </SectionBlock>
-
-        {/* Advanced */}
-        <SectionBlock title="Advanced Options">
-          <ReviewRow
-            label="Features"
-            value={
-              config.advancedOptions.length > 0
-                ? config.advancedOptions.map((o) => ADVANCED_OPTION_LABELS[o]).join(', ')
-                : 'None'
-            }
-          />
-        </SectionBlock>
-      </div>
-    </motion.div>
-  )
-}
-
-/* ─────────────────────────────────────────────
-   Review helpers
-   ───────────────────────────────────────────── */
-
-function SectionBlock({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-        {title}
-      </p>
+    <div className="rounded-lg border border-border p-3">
+      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">{title}</p>
       <div className="space-y-1.5">{children}</div>
     </div>
   )
 }
 
-function ReviewRow({ label, value }: { label: string; value: React.ReactNode }) {
+function ReviewItem({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-start justify-between gap-4">
-      <span className="text-xs text-muted-foreground shrink-0">{label}</span>
-      <span className="text-sm font-medium text-foreground text-right">{value}</span>
+    <div className="flex items-center justify-between text-sm">
+      <span className="text-muted-foreground">{label}</span>
+      <span className="font-medium text-right max-w-[60%] truncate">{value || '—'}</span>
     </div>
   )
 }

@@ -1,55 +1,23 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
-import { ArrowLeft, Scale } from 'lucide-react'
-import { Footer } from '@/components/Footer'
+import { createFileRoute } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/terms')({
-  head: () => ({
-    meta: [
-      { title: 'Terms of Service · GrowthFlow AI' },
-      { name: 'description', content: 'GrowthFlow AI terms of service.' },
-    ],
-  }),
+  head: () => ({ meta: [{ title: 'Terms of Service · GrowthFlow AI' }] }),
   component: TermsPage,
 })
 
 function TermsPage() {
   return (
-    <div className="min-h-dvh bg-background text-foreground">
-      <main className="max-w-3xl mx-auto px-6 py-24">
-        <Link to="/" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-8">
-          <ArrowLeft className="size-4" />
-          Back to Home
-        </Link>
-        <div className="flex items-center gap-3 mb-8">
-          <div className="flex size-10 items-center justify-center rounded-xl bg-muted">
-            <Scale className="size-5 text-muted-foreground" />
-          </div>
-          <h1 className="text-3xl font-bold tracking-tight">Terms of Service</h1>
-        </div>
-        <div className="prose prose-invert max-w-none space-y-4 text-muted-foreground text-sm leading-relaxed">
-          <p>Last updated: July 2026</p>
-          <p>
-            By using GrowthFlow AI (&ldquo;the Service&rdquo;), you agree to these Terms of Service.
-            Please read them carefully before using the platform.
-          </p>
-          <h2 className="text-foreground text-lg font-semibold mt-8">Use of Service</h2>
-          <p>
-            You may use the Service to generate startup blueprints, websites, and SaaS foundations.
-            You retain all rights to the content you create. You are responsible for complying with
-            all applicable laws.
-          </p>
-          <h2 className="text-foreground text-lg font-semibold mt-8">Account Terms</h2>
-          <p>
-            You are responsible for maintaining the security of your account. You must provide
-            accurate information when creating an account and keep it up to date.
-          </p>
-          <h2 className="text-foreground text-lg font-semibold mt-8">Contact</h2>
-          <p>
-            For questions about these terms, email us at legal@growthflow.ai.
-          </p>
-        </div>
-      </main>
-      <Footer />
+    <div className="container mx-auto px-4 py-20 max-w-3xl">
+      <h1 className="text-4xl font-bold mb-8">Terms of Service</h1>
+      <div className="prose prose-sm dark:prose-invert max-w-none">
+        <p className="text-muted-foreground">Last updated: {new Date().getFullYear()}</p>
+        <h2 className="text-xl font-semibold mt-6 mb-2">Acceptance</h2>
+        <p className="text-muted-foreground">By using GrowthFlow AI, you agree to these terms.</p>
+        <h2 className="text-xl font-semibold mt-6 mb-2">Service</h2>
+        <p className="text-muted-foreground">GrowthFlow AI provides AI-powered website blueprint generation. We reserve the right to modify or discontinue the service at any time.</p>
+        <h2 className="text-xl font-semibold mt-6 mb-2">Usage</h2>
+        <p className="text-muted-foreground">You may use generated blueprints for personal and commercial projects. You may not resell the AI generation service itself.</p>
+      </div>
     </div>
   )
 }

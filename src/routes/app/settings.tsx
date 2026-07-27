@@ -1,24 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, Badge } from '@blinkdotnew/ui'
-import { UserCog, Bell, CreditCard } from 'lucide-react'
-
-const SETTINGS_CARDS = [
-  {
-    title: 'Account Settings',
-    description: 'Manage your profile, email, and password.',
-    icon: UserCog,
-  },
-  {
-    title: 'Notifications',
-    description: 'Configure how you receive updates and alerts.',
-    icon: Bell,
-  },
-  {
-    title: 'Billing',
-    description: 'View plan details and manage your subscription.',
-    icon: CreditCard,
-  },
-]
+import { Card, CardContent } from '@blinkdotnew/ui'
+import { useAuth } from '@/hooks/useAuth'
 
 export const Route = createFileRoute('/app/settings')({
   head: () => ({ meta: [{ title: 'Settings · GrowthFlow AI' }] }),
@@ -26,42 +8,46 @@ export const Route = createFileRoute('/app/settings')({
 })
 
 function SettingsPage() {
+  const { user } = useAuth()
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-2xl">
       <div>
-        <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">
-          Settings
-        </h1>
-        <p className="text-muted-foreground mt-1 text-sm">
-          Manage your account preferences and workspace configuration.
-        </p>
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Settings</h1>
+        <p className="text-sm text-muted-foreground mt-1">Manage your account and preferences</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {SETTINGS_CARDS.map((card) => (
-          <Card
-            key={card.title}
-            className="border-border bg-card hover:border-primary/30 transition-colors duration-200 cursor-pointer"
-          >
-            <CardHeader className="pb-3">
-              <div className="flex items-start justify-between gap-2 mb-1">
-                <div className="flex size-9 items-center justify-center rounded-lg bg-muted">
-                  <card.icon className="size-4.5 text-muted-foreground" />
-                </div>
-                <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                  Coming Soon
-                </Badge>
-              </div>
-              <CardTitle className="text-sm font-semibold text-foreground">
-                {card.title}
-              </CardTitle>
-              <CardDescription className="text-xs text-muted-foreground">
-                {card.description}
-              </CardDescription>
-            </CardHeader>
-          </Card>
-        ))}
-      </div>
+      <Card className="border-border bg-card">
+        <CardContent className="p-6 space-y-4">
+          <h2 className="text-lg font-semibold">Account</h2>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">Email</span>
+              <span className="text-sm font-medium">{user?.email ?? '—'}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">User ID</span>
+              <span className="text-sm font-mono text-muted-foreground">{user?.id?.slice(0, 8)}...</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="border-border bg-card">
+        <CardContent className="p-6 space-y-4">
+          <h2 className="text-lg font-semibold">AI Provider</h2>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">Active Provider</span>
+              <span className="text-sm font-medium">Google Gemini</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">Model</span>
+              <span className="text-sm font-medium">gemini-2.0-flash</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }

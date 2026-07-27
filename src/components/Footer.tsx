@@ -1,95 +1,53 @@
 import { Link } from '@tanstack/react-router'
-import { Globe } from 'lucide-react'
-
-const PRODUCT_LINKS = [
-  { label: 'Features', href: '#features' },
-  { label: 'Pricing', href: '/pricing' },
-  { label: 'Documentation', href: '/docs' },
-]
-
-const COMPANY_LINKS = [
-  { label: 'About', href: '#' },
-  { label: 'Contact', href: '/contact' },
-  { label: 'Privacy Policy', href: '/privacy' },
-  { label: 'Terms of Service', href: '/terms' },
-]
+import { Sparkles } from 'lucide-react'
 
 export function Footer() {
   return (
-    <footer className="border-t border-border/40 bg-background">
-      <div className="mx-auto max-w-7xl px-6 py-16">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-10">
-          {/* Brand */}
+    <footer className="border-t border-border bg-background">
+      <div className="container mx-auto px-4 py-12">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           <div className="col-span-2 md:col-span-1">
-            <div className="mb-3">
-              <img
-                src="/logo.png"
-                alt="GrowthFlow AI"
-                className="h-6 w-auto object-contain"
-              />
-            </div>
-            <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">
-              Build, launch, and grow your startup with AI — all in one platform.
+            <Link to="/" className="flex items-center gap-2 mb-4">
+              <div className="flex size-7 items-center justify-center rounded-lg bg-primary">
+                <Sparkles className="size-4 text-primary-foreground" />
+              </div>
+              <span className="text-base font-bold">GrowthFlow AI</span>
+            </Link>
+            <p className="text-sm text-muted-foreground max-w-xs">
+              AI-powered website generation for businesses of all sizes.
             </p>
           </div>
 
-          {/* Product */}
           <div>
-            <h4 className="text-sm font-semibold text-foreground mb-4">Product</h4>
-            <ul className="space-y-2.5">
-              {PRODUCT_LINKS.map((l) => (
-                <li key={l.label}>
-                  {l.href.startsWith('#') ? (
-                    <a href={l.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                      {l.label}
-                    </a>
-                  ) : (
-                    <Link to={l.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                      {l.label}
-                    </Link>
-                  )}
-                </li>
-              ))}
+            <h4 className="text-sm font-semibold mb-3">Product</h4>
+            <ul className="space-y-2">
+              <li><Link to="/pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Pricing</Link></li>
+              <li><Link to="/docs" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Documentation</Link></li>
+              <li><Link to="/app/templates" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Templates</Link></li>
             </ul>
           </div>
 
-          {/* Company */}
           <div>
-            <h4 className="text-sm font-semibold text-foreground mb-4">Company</h4>
-            <ul className="space-y-2.5">
-              {COMPANY_LINKS.map((l) => (
-                <li key={l.label}>
-                  {l.href.startsWith('#') ? (
-                    <a href={l.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                      {l.label}
-                    </a>
-                  ) : (
-                    <Link to={l.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                      {l.label}
-                    </Link>
-                  )}
-                </li>
-              ))}
+            <h4 className="text-sm font-semibold mb-3">Company</h4>
+            <ul className="space-y-2">
+              <li><Link to="/contact" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Contact</Link></li>
+              <li><Link to="/privacy" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Privacy Policy</Link></li>
+              <li><Link to="/terms" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Terms of Service</Link></li>
             </ul>
           </div>
 
-          {/* Social */}
           <div>
-            <h4 className="text-sm font-semibold text-foreground mb-4">Follow Us</h4>
-            <div className="flex gap-3">
-              <a href="#" className="size-9 flex items-center justify-center rounded-md border border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors" aria-label="Social">
-                <Globe className="size-4" />
-              </a>
-              <a href="#" className="size-9 flex items-center justify-center rounded-md border border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors" aria-label="Social">
-                <Globe className="size-4" />
-              </a>
-            </div>
+            <h4 className="text-sm font-semibold mb-3">Get Started</h4>
+            <ul className="space-y-2">
+              <li><Link to="/sign-up" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Create Account</Link></li>
+              <li><Link to="/sign-in" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Sign In</Link></li>
+            </ul>
           </div>
         </div>
 
-        <div className="mt-12 pt-6 border-t border-border/40 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-xs text-muted-foreground">
-            &copy; {new Date().getFullYear()} GrowthFlow AI. All rights reserved.
+        <div className="mt-8 pt-8 border-t border-border">
+          <p className="text-xs text-muted-foreground text-center">
+            © {new Date().getFullYear()} GrowthFlow AI. All rights reserved.
           </p>
         </div>
       </div>

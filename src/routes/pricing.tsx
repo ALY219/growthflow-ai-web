@@ -1,103 +1,91 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { Button, Card, CardContent, CardHeader, CardTitle, CardDescription, Badge } from '@blinkdotnew/ui'
-import { Check } from 'lucide-react'
-import { Navbar } from '@/components/Navbar'
-import { Footer } from '@/components/Footer'
-
-const PLANS = [
-  {
-    name: 'Launch Pad',
-    price: 9,
-    description: 'Perfect for students and first-time founders.',
-    features: ['3 active projects', 'Basic AI assistance', 'Community support', 'Export to PDF', 'Standard templates'],
-    popular: false,
-  },
-  {
-    name: 'Startup Engine',
-    price: 18,
-    description: 'For freelancers and builders shipping fast.',
-    features: ['10 active projects', 'Advanced AI generation', 'Priority support', 'Custom domains', 'Premium templates', 'Analytics dashboard'],
-    popular: true,
-  },
-  {
-    name: 'AI Founder Suite',
-    price: 25,
-    description: 'For entrepreneurs building multiple ventures.',
-    features: ['Unlimited projects', 'Premium AI models', 'Dedicated support', 'Team collaboration', 'White-label exports', 'API access', 'Early feature access'],
-    popular: false,
-  },
-]
+import { motion } from 'framer-motion'
+import { Check, Sparkles } from 'lucide-react'
+import { Link } from '@tanstack/react-router'
+import { Button } from '@blinkdotnew/ui'
 
 export const Route = createFileRoute('/pricing')({
-  head: () => ({
-    meta: [
-      { title: 'Pricing · GrowthFlow AI' },
-      { name: 'description', content: 'Simple, transparent pricing for turning your ideas into startups.' },
-    ],
-  }),
+  head: () => ({ meta: [{ title: 'Pricing · GrowthFlow AI' }] }),
   component: PricingPage,
 })
 
+const plans = [
+  {
+    name: 'Starter',
+    price: '$0',
+    period: 'forever',
+    desc: 'Perfect for trying out GrowthFlow AI',
+    features: ['3 AI generations per month', 'Basic website blueprint', 'Standard design styles', 'Community support'],
+    cta: 'Get Started',
+    highlight: false,
+  },
+  {
+    name: 'Pro',
+    price: '$29',
+    period: 'per month',
+    desc: 'For professionals and growing businesses',
+    features: ['Unlimited AI generations', 'Full website blueprints', 'All design styles', 'Custom pages & features', 'Priority support', 'Export to code'],
+    cta: 'Start Pro Trial',
+    highlight: true,
+  },
+  {
+    name: 'Business',
+    price: '$99',
+    period: 'per month',
+    desc: 'For teams and agencies',
+    features: ['Everything in Pro', 'Team collaboration', 'Multiple projects', 'API access', 'White-label options', 'Dedicated support'],
+    cta: 'Contact Sales',
+    highlight: false,
+  },
+]
+
 function PricingPage() {
   return (
-    <div className="min-h-dvh bg-background text-foreground">
-      <Navbar />
-      <main className="pt-24 pb-20 px-6">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-              Simple, Transparent Pricing
-            </h1>
-            <p className="mt-4 text-muted-foreground text-lg max-w-xl mx-auto">
-              Start building for free. Upgrade when you&apos;re ready to scale.
-            </p>
-          </div>
+    <div className="container mx-auto px-4 py-20">
+      <div className="text-center mb-12">
+        <h1 className="text-4xl font-bold mb-4">Simple, Transparent Pricing</h1>
+        <p className="text-muted-foreground max-w-xl mx-auto">
+          Choose the plan that fits your needs. Upgrade or downgrade anytime.
+        </p>
+      </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {PLANS.map((plan) => (
-              <Card
-                key={plan.name}
-                className={`relative border-border bg-card transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/5 ${
-                  plan.popular ? 'ring-1 ring-primary/50 shadow-lg shadow-primary/5' : ''
-                }`}
-              >
-                {plan.popular && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <Badge className="bg-primary text-primary-foreground text-xs font-medium px-3 py-0.5">
-                      Most Popular
-                    </Badge>
-                  </div>
-                )}
-                <CardHeader className="text-center pb-4">
-                  <CardTitle className="text-xl font-semibold">{plan.name}</CardTitle>
-                  <CardDescription className="text-sm mt-1">{plan.description}</CardDescription>
-                  <div className="mt-4">
-                    <span className="text-4xl font-bold">${plan.price}</span>
-                    <span className="text-muted-foreground text-sm">/mo</span>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-3 mb-6">
-                    {plan.features.map((f) => (
-                      <li key={f} className="flex items-start gap-2.5 text-sm text-muted-foreground">
-                        <Check className="size-4 shrink-0 text-primary mt-0.5" />
-                        {f}
-                      </li>
-                    ))}
-                  </ul>
-                  <Button
-                    className="w-full"
-                    variant={plan.popular ? 'default' : 'outline'}
-                  >
-                    Get Started
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </main>
-      <Footer />
+      <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+        {plans.map((plan, i) => (
+          <motion.div
+            key={plan.name}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.1 }}
+            className={`rounded-2xl border p-6 ${plan.highlight ? 'border-primary bg-primary/5 shadow-lg' : 'border-border bg-card'}`}
+          >
+            {plan.highlight && (
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-1 text-xs font-medium text-primary-foreground mb-4">
+                <Sparkles className="size-3" />
+                Most Popular
+              </div>
+            )}
+            <h3 className="text-xl font-bold">{plan.name}</h3>
+            <p className="text-sm text-muted-foreground mt-1">{plan.desc}</p>
+            <div className="mt-4 mb-6">
+              <span className="text-4xl font-bold">{plan.price}</span>
+              <span className="text-muted-foreground ml-1">/{plan.period}</span>
+            </div>
+            <ul className="space-y-3 mb-6">
+              {plan.features.map((f) => (
+                <li key={f} className="flex items-start gap-2 text-sm">
+                  <Check className="size-4 text-primary shrink-0 mt-0.5" />
+                  {f}
+                </li>
+              ))}
+            </ul>
+            <Link to="/sign-up" className="block">
+              <Button className="w-full" variant={plan.highlight ? 'default' : 'outline'}>
+                {plan.cta}
+              </Button>
+            </Link>
+          </motion.div>
+        ))}
+      </div>
     </div>
   )
 }
