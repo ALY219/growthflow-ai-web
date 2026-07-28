@@ -1,7 +1,7 @@
 {
   "name": "vite-react-app",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -14,7 +14,7 @@
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "typescript": "~6.0.2",
-    "vite": "8.1.5"
+    "vite": "7.3.6"
   },
   "dependencies": {
     "@blinkdotnew/sdk": "^2.6.2",

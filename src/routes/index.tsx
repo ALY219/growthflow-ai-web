@@ -10,8 +10,7 @@ export const Route = createFileRoute('/')({
 
 function HomePage() {
   return (
-    <div>
-      <section className="relative overflow-hidden">
+    <div>      <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent" />
         <div className="container mx-auto px-4 py-24 md:py-32 relative">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="max-w-3xl mx-auto text-center">

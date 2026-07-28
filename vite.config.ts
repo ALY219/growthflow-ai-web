@@ -39,11 +39,9 @@ export default defineConfig({
   },
   build: {
     outDir: '.vite-out',
-    rolldownOptions: {
+    rollupOptions: {
       output: {
-        advancedChunks: {
-          minSize: 1024 * 10,
-        },
+        manualChunks: undefined,
       },
     },
   },
