@@ -1,5 +1,5 @@
 import '@/index.css'
-import { StrictMode } from 'react'
+import { StrictMode, startTransition } from 'react'
 import { hydrateRoot } from 'react-dom/client'
 import { StartClient } from '@tanstack/react-start/client'
 import { createRouter } from '@/router'
@@ -18,16 +18,18 @@ const queryClient = new QueryClient({
   },
 })
 
-hydrateRoot(
-  document.getElementById('root')!,
-  <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <BlinkUIProvider>
-        <AuthProvider>
-          <StartClient />
-          <Toaster />
-        </AuthProvider>
-      </BlinkUIProvider>
-    </QueryClientProvider>
-  </StrictMode>,
-)
+startTransition(() => {
+  hydrateRoot(
+    document,
+    <StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <BlinkUIProvider>
+          <AuthProvider>
+            <StartClient />
+            <Toaster />
+          </AuthProvider>
+        </BlinkUIProvider>
+      </QueryClientProvider>
+    </StrictMode>,
+  )
+})
