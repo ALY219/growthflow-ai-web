@@ -23,7 +23,7 @@ function SettingsPage() {
         <h2 className="text-lg font-semibold">AI Provider</h2>
         <div className="space-y-2">
           <div className="flex items-center justify-between"><span className="text-sm text-muted-foreground">Active Provider</span><span className="text-sm font-medium">Google Gemini</span></div>
-          <div className="flex items-center justify-between"><span className="text-sm text-muted-foreground">Model</span><span className="text-sm font-medium">gemini-2.0-flash</span></div>
+          <div className="flex items-center justify-between"><span className="text-sm text-muted-foreground">Model</span><span className="text-sm font-medium">gemini-2.5-flash</span></div>
         </div>
       </CardContent></Card>
     </div>

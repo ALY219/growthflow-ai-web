@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Plus, FolderOpen } from 'lucide-react'
@@ -13,6 +13,7 @@ export const Route = createFileRoute('/app/projects')({
 
 function ProjectsPage() {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const { data: projects = [], isLoading } = useProjects(user?.id)
   const createProject = useCreateProject()
   const deleteProject = useDeleteProject()
@@ -20,11 +21,18 @@ function ProjectsPage() {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
 
+  const [createError, setCreateError] = useState<string | null>(null)
+
   const handleCreate = async () => {
     if (!user?.id || !name.trim()) return
-    const result = await createProject.mutateAsync({ name: name.trim(), description, userId: user.id })
-    setName(''); setDescription(''); setDialogOpen(false)
-    window.location.href = `/app/projects/${result.id}`
+    setCreateError(null)
+    try {
+      const result = await createProject.mutateAsync({ name: name.trim(), description, userId: user.id })
+      setName(''); setDescription(''); setDialogOpen(false)
+      navigate({ to: '/app/projects/$id', params: { id: result.id } })
+    } catch (err) {
+      setCreateError(err instanceof Error ? err.message : 'Failed to create project.')
+    }
   }
 
   return (
@@ -66,6 +74,7 @@ function ProjectsPage() {
           <div className="space-y-4 py-4">
             <div className="space-y-2"><label className="text-sm font-medium">Project Name</label><Input value={name} onChange={(e) => setName(e.target.value)} placeholder="My Awesome Website" autoFocus /></div>
             <div className="space-y-2"><label className="text-sm font-medium">Description (optional)</label><Input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="A brief description of your project" /></div>
+            {createError && (<div className="rounded-lg bg-destructive/10 border border-destructive/30 px-4 py-3 text-sm text-destructive">{createError}</div>)}
             <Button onClick={handleCreate} className="w-full" disabled={!name.trim() || createProject.isPending}>{createProject.isPending ? 'Creating...' : 'Create Project'}</Button>
           </div>
         </DialogContent>

@@ -25,17 +25,20 @@ function ProjectDetailPage() {
   const [wizardOpen, setWizardOpen] = useState(false)
   const [wizardConfig, setWizardConfig] = useState<GenerationConfig>(createDefaultConfig)
   const [wizardPending, setWizardPending] = useState(false)
+  const [wizardError, setWizardError] = useState<string | null>(null)
 
   const handleWizardSubmit = useCallback(async () => {
     if (!user?.id || !project) return
     setWizardPending(true)
+    setWizardError(null)
     try {
       await createGenJob.mutateAsync({ projectId: project.id, userId: user.id, config: wizardConfig })
       setWizardOpen(false)
       setWizardPending(false)
       navigate({ to: '/app/projects/$id/generation', params: { id: project.id } })
-    } catch {
+    } catch (err) {
       setWizardPending(false)
+      setWizardError(err instanceof Error ? err.message : 'Failed to start generation.')
     }
   }, [user?.id, project, wizardConfig, createGenJob, navigate])
 
@@ -73,6 +76,7 @@ function ProjectDetailPage() {
         <p className="text-sm text-muted-foreground mt-1.5 max-w-md mx-auto mb-6">Use the AI wizard to configure your website and generate a complete blueprint with Google Gemini.</p>
         <Button onClick={() => setWizardOpen(true)} size="lg" className="gap-2"><Sparkles className="size-4" />Open Generation Wizard</Button>
       </CardContent></Card>
+      {wizardError && (<div className="rounded-lg bg-destructive/10 border border-destructive/30 px-4 py-3 text-sm text-destructive">{wizardError}</div>)}
       <WebsiteGenerationWizard open={wizardOpen} config={wizardConfig} onConfigChange={setWizardConfig} onSubmit={handleWizardSubmit} onCancel={() => setWizardOpen(false)} pending={wizardPending} />
     </div>
   )
