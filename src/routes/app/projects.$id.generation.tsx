@@ -1,10 +1,7 @@
 import { createFileRoute, useParams, Link } from '@tanstack/react-router'
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import {
-  ArrowLeft, Sparkles, AlertCircle, RotateCcw, CheckCircle2, Clock,
-  Palette, Type, FileText, Layout, Lightbulb,
-} from 'lucide-react'
+import { ArrowLeft, Sparkles, CircleAlert as AlertCircle, RotateCcw, CircleCheck as CheckCircle2, Clock, Palette, Type, FileText, LayoutGrid as Layout, Lightbulb } from 'lucide-react'
 import { Button, Card, CardContent, Badge } from '@blinkdotnew/ui'
 import { useAuth } from '@/hooks/useAuth'
 import { useProjects, useGenerationJobs, useUpdateGenerationJob } from '@/hooks/useProjects'
@@ -14,6 +11,9 @@ import type { WebsiteBlueprint, GenerationError, GenerationConfig } from '@/lib/
 export const Route = createFileRoute('/app/projects/$id/generation')({
   head: () => ({ meta: [{ title: 'Generation · GrowthFlow AI' }] }),
   component: GenerationPage,
+  validateSearch: (search: Record<string, unknown>) => ({
+    wizard: Boolean(search.wizard),
+  }),
 })
 
 type ViewState = 'loading' | 'success' | 'error'
@@ -91,7 +91,7 @@ function GenerationPage() {
 
   return (
     <div className="space-y-6 max-w-4xl">
-      <Link to="/app/projects/$id" params={{ id }} className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"><ArrowLeft className="size-3.5" />Back to Project</Link>
+      <Link to="/app/projects/$id" params={{ id }} search={{ wizard: false }} className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"><ArrowLeft className="size-3.5" />Back to Project</Link>
       <div className="space-y-2">
         <div className="flex items-center gap-2">
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight">AI Generation</h1>
@@ -184,7 +184,7 @@ function SuccessView({ blueprint, projectId }: { blueprint: WebsiteBlueprint; pr
         </CardContent></Card>
       )}
       <div className="flex gap-3">
-        <Link to="/app/projects/$id" params={{ id: projectId }}><Button variant="outline" className="gap-2"><ArrowLeft className="size-4" />Back to Project</Button></Link>
+        <Link to="/app/projects/$id" params={{ id: projectId }} search={{ wizard: false }}><Button variant="outline" className="gap-2"><ArrowLeft className="size-4" />Back to Project</Button></Link>
       </div>
     </motion.div>
   )

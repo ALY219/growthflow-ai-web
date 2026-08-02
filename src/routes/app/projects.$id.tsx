@@ -1,5 +1,5 @@
-import { createFileRoute, useParams, useNavigate, Link } from '@tanstack/react-router'
-import { useState, useCallback, useMemo } from 'react'
+import { createFileRoute, useParams, useNavigate, Link, useSearch } from '@tanstack/react-router'
+import { useState, useCallback, useMemo, useEffect } from 'react'
 import { ArrowLeft, Sparkles, Trash2 } from 'lucide-react'
 import { Button, Card, CardContent } from '@blinkdotnew/ui'
 import { useAuth } from '@/hooks/useAuth'
@@ -10,11 +10,15 @@ import { type GenerationConfig, createDefaultConfig } from '@/lib/generation-typ
 export const Route = createFileRoute('/app/projects/$id')({
   head: () => ({ meta: [{ title: 'Project · GrowthFlow AI' }] }),
   component: ProjectDetailPage,
+  validateSearch: (search: Record<string, unknown>) => ({
+    wizard: Boolean(search.wizard),
+  }),
 })
 
 function ProjectDetailPage() {
   const { user } = useAuth()
   const { id } = useParams({ from: '/app/projects/$id' })
+  const search = useSearch({ from: '/app/projects/$id' })
   const navigate = useNavigate()
   const { data: projects = [], isLoading } = useProjects(user?.id)
   const deleteProject = useDeleteProject()
@@ -27,6 +31,18 @@ function ProjectDetailPage() {
   const [wizardPending, setWizardPending] = useState(false)
   const [wizardError, setWizardError] = useState<string | null>(null)
 
+  useEffect(() => {
+    if (search.wizard && project && !wizardOpen) {
+      const stored = sessionStorage.getItem(`wizard-config-${project.id}`)
+      if (stored) {
+        try { setWizardConfig(JSON.parse(stored)) } catch { /* keep default */ }
+        sessionStorage.removeItem(`wizard-config-${project.id}`)
+      }
+      setWizardOpen(true)
+      navigate({ to: '/app/projects/$id', params: { id }, search: { wizard: false }, replace: true })
+    }
+  }, [search.wizard, project, wizardOpen, id, navigate])
+
   const handleWizardSubmit = useCallback(async () => {
     if (!user?.id || !project) return
     setWizardPending(true)
@@ -35,7 +51,7 @@ function ProjectDetailPage() {
       await createGenJob.mutateAsync({ projectId: project.id, userId: user.id, config: wizardConfig })
       setWizardOpen(false)
       setWizardPending(false)
-      navigate({ to: '/app/projects/$id/generation', params: { id: project.id } })
+      navigate({ to: '/app/projects/$id/generation', params: { id: project.id }, search: { wizard: false } })
     } catch (err) {
       setWizardPending(false)
       setWizardError(err instanceof Error ? err.message : 'Failed to start generation.')

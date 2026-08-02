@@ -43,8 +43,8 @@ function DashboardPage() {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             {projects.slice(0, 6).map((p, i) => (
               <motion.div key={p.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
-                <Link to="/app/projects/$id" params={{ id: p.id }}>
-                  <Card className="border-border bg-card hover:border-primary/50 transition-colors cursor-pointer">
+                <Link to="/app/projects/$id" params={{ id: p.id }} search={{ wizard: false }}>
+                  <Card className="border-border bg-card hover:border-primary/50 transition-colors cursor-pointer h-full">
                     <CardContent className="p-5">
                       <p className="font-semibold truncate">{p.name}</p>
                       <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{p.description || 'No description'}</p>

@@ -29,7 +29,7 @@ function ProjectsPage() {
     try {
       const result = await createProject.mutateAsync({ name: name.trim(), description, userId: user.id })
       setName(''); setDescription(''); setDialogOpen(false)
-      navigate({ to: '/app/projects/$id', params: { id: result.id } })
+      navigate({ to: '/app/projects/$id', params: { id: result.id }, search: { wizard: true } })
     } catch (err) {
       setCreateError(err instanceof Error ? err.message : 'Failed to create project.')
     }
@@ -54,16 +54,16 @@ function ProjectsPage() {
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
           {projects.map((p, i) => (
             <motion.div key={p.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
-              <Card className="border-border bg-card hover:border-primary/50 transition-colors">
-                <CardContent className="p-5">
-                  <Link to="/app/projects/$id" params={{ id: p.id }}>
+              <Link to="/app/projects/$id" params={{ id: p.id }} search={{ wizard: false }}>
+                <Card className="border-border bg-card hover:border-primary/50 transition-colors cursor-pointer h-full">
+                  <CardContent className="p-5">
                     <p className="font-semibold truncate">{p.name}</p>
                     <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{p.description || 'No description'}</p>
                     <p className="text-xs text-muted-foreground mt-3">{new Date(p.created_at).toLocaleDateString()}</p>
-                  </Link>
-                  <button onClick={() => deleteProject.mutate(p.id)} className="text-xs text-destructive hover:underline mt-2">Delete</button>
-                </CardContent>
-              </Card>
+                    <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); deleteProject.mutate(p.id) }} className="text-xs text-destructive hover:underline mt-2">Delete</button>
+                  </CardContent>
+                </Card>
+              </Link>
             </motion.div>
           ))}
         </div>
