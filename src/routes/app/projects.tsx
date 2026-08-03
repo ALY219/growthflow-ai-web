@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, Link, useNavigate, Outlet, useLocation } from '@tanstack/react-router'
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Plus, FolderOpen } from 'lucide-react'
@@ -14,6 +14,7 @@ export const Route = createFileRoute('/app/projects')({
 function ProjectsPage() {
   const { user } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
   const { data: projects = [], isLoading } = useProjects(user?.id)
   const createProject = useCreateProject()
   const deleteProject = useDeleteProject()
@@ -22,6 +23,7 @@ function ProjectsPage() {
   const [description, setDescription] = useState('')
 
   const [createError, setCreateError] = useState<string | null>(null)
+  const isIndex = location.pathname === '/app/projects'
 
   const handleCreate = async () => {
     if (!user?.id || !name.trim()) return
@@ -34,6 +36,8 @@ function ProjectsPage() {
       setCreateError(err instanceof Error ? err.message : 'Failed to create project.')
     }
   }
+
+  if (!isIndex) return <Outlet />
 
   return (
     <div className="space-y-6 max-w-5xl">
