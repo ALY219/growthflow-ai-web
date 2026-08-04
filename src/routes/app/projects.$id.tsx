@@ -1,4 +1,4 @@
-import { createFileRoute, useParams, useNavigate, Link, useSearch } from '@tanstack/react-router'
+import { createFileRoute, useParams, useNavigate, Link, useSearch, Outlet, useLocation } from '@tanstack/react-router'
 import { useState, useCallback, useMemo, useEffect } from 'react'
 import { ArrowLeft, Sparkles, Trash2 } from 'lucide-react'
 import { Button, Card, CardContent } from '@blinkdotnew/ui'
@@ -20,6 +20,7 @@ function ProjectDetailPage() {
   const { id } = useParams({ from: '/app/projects/$id' })
   const search = useSearch({ from: '/app/projects/$id' })
   const navigate = useNavigate()
+  const location = useLocation()
   const { data: projects = [], isLoading } = useProjects(user?.id)
   const deleteProject = useDeleteProject()
   const createGenJob = useCreateGenerationJob()
@@ -60,6 +61,10 @@ function ProjectDetailPage() {
 
   if (isLoading) {
     return (<div className="flex items-center justify-center py-20"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>)
+  }
+
+  if (location.pathname !== `/app/projects/${id}`) {
+    return <Outlet />
   }
 
   if (!project) {
