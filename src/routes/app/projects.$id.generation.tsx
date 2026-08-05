@@ -1,5 +1,5 @@
 import { createFileRoute, useParams, Link } from '@tanstack/react-router'
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowLeft, Sparkles, CircleAlert as AlertCircle, RotateCcw, CircleCheck as CheckCircle2, Clock, Palette, Type, FileText, LayoutGrid as Layout, Lightbulb } from 'lucide-react'
 import { Button, Card, CardContent, Badge } from '@blinkdotnew/ui'
@@ -31,13 +31,16 @@ function GenerationPage() {
   const [viewState, setViewState] = useState<ViewState>('loading')
   const [blueprint, setBlueprint] = useState<WebsiteBlueprint | null>(null)
   const [error, setError] = useState<GenerationError | null>(null)
+  const runningRef = useRef(false)
 
   const runGeneration = useCallback(async () => {
-    if (!latestJob) return
+    if (!latestJob || runningRef.current) return
+    runningRef.current = true
     setViewState('loading')
     setError(null)
 
     try {
+      await updateJob.mutateAsync({ id: latestJob.id, status: 'generating' })
       const config = latestJob.config as unknown as GenerationConfig
       const result = await generateBlueprint(config)
 
@@ -69,8 +72,12 @@ function GenerationPage() {
   }, [latestJob, updateJob])
 
   useEffect(() => {
-    if (latestJob && latestJob.status === 'pending') {
-      runGeneration()
+    if (latestJob && (latestJob.status === 'pending' || latestJob.status === 'generating')) {
+      if (latestJob.status === 'pending') {
+        runGeneration()
+      } else {
+        setViewState('loading')
+      }
     } else if (latestJob && latestJob.status === 'completed') {
       const stored = (latestJob.config as Record<string, unknown>)?.blueprint as WebsiteBlueprint | undefined
       if (stored) {

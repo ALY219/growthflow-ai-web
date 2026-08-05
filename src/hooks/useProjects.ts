@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import type { GenerationConfig } from '@/lib/generation-types'
 
@@ -74,7 +75,8 @@ export interface GenerationJob {
 }
 
 export function useGenerationJobs(projectId?: string) {
-  return useQuery<GenerationJob[]>({
+  const [hasActive, setHasActive] = useState(false)
+  const query = useQuery<GenerationJob[]>({
     queryKey: ['generation-jobs', projectId],
     queryFn: async () => {
       let q = supabase.from('generation_jobs').select('*')
@@ -85,8 +87,15 @@ export function useGenerationJobs(projectId?: string) {
       return data ?? []
     },
     enabled: !!projectId,
-    refetchInterval: 3000,
+    refetchInterval: hasActive ? 3000 : false,
   })
+
+  useEffect(() => {
+    const jobs = query.data ?? []
+    setHasActive(jobs.some((j) => j.status === 'pending' || j.status === 'generating'))
+  }, [query.data])
+
+  return query
 }
 
 export interface CreateGenerationJobInput {
@@ -99,6 +108,16 @@ export function useCreateGenerationJob() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (input: CreateGenerationJobInput) => {
+      const { data: existing } = await supabase
+        .from('generation_jobs')
+        .select('id, status')
+        .eq('project_id', input.projectId)
+        .in('status', ['pending', 'generating'])
+        .order('created_at', { ascending: false })
+        .limit(1)
+      if (existing && existing.length > 0) {
+        return existing[0]
+      }
       const { data, error } = await supabase
         .from('generation_jobs')
         .insert({

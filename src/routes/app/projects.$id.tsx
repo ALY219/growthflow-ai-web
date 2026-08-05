@@ -1,6 +1,6 @@
 import { createFileRoute, useParams, useNavigate, Link, useSearch, Outlet, useLocation } from '@tanstack/react-router'
 import { useState, useCallback, useMemo, useEffect } from 'react'
-import { ArrowLeft, Sparkles, Trash2, CheckCircle2, AlertCircle, Eye, RotateCcw } from 'lucide-react'
+import { ArrowLeft, Sparkles, Trash2, CircleCheck as CheckCircle2, CircleAlert as AlertCircle, Eye, RotateCcw } from 'lucide-react'
 import { Button, Card, CardContent } from '@blinkdotnew/ui'
 import { useAuth } from '@/hooks/useAuth'
 import { useProjects, useDeleteProject, useCreateGenerationJob, useGenerationJobs } from '@/hooks/useProjects'
@@ -54,7 +54,13 @@ function ProjectDetailPage() {
 
   const handleWizardSubmit = useCallback(async () => {
     if (!user?.id || !project) return
-    if (latestJob && latestJob.status === 'completed' && (latestJob.config as Record<string, unknown>)?.blueprint) return
+    if (latestJob && ['pending', 'generating', 'completed'].includes(latestJob.status)) {
+      if (latestJob.status === 'completed' && (latestJob.config as Record<string, unknown>)?.blueprint) return
+      if (latestJob.status === 'pending' || latestJob.status === 'generating') {
+        navigate({ to: '/app/projects/$id/generation', params: { id: project.id }, search: { wizard: false } })
+        return
+      }
+    }
     setWizardPending(true)
     setWizardError(null)
     try {
