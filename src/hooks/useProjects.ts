@@ -85,6 +85,7 @@ export function useGenerationJobs(projectId?: string) {
       return data ?? []
     },
     enabled: !!projectId,
+    refetchInterval: 3000,
   })
 }
 
@@ -95,6 +96,7 @@ export interface CreateGenerationJobInput {
 }
 
 export function useCreateGenerationJob() {
+  const qc = useQueryClient()
   return useMutation({
     mutationFn: async (input: CreateGenerationJobInput) => {
       const { data, error } = await supabase
@@ -111,6 +113,7 @@ export function useCreateGenerationJob() {
       if (error) throw error
       return data
     },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['generation-jobs'] }),
   })
 }
 
