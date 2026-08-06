@@ -24,7 +24,15 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const body = await req.json();
+    let body: { prompt?: unknown };
+    try {
+      body = await req.json();
+    } catch {
+      return new Response(
+        JSON.stringify({ error: "Invalid JSON in request body." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
     const prompt = body?.prompt;
 
     if (!prompt || typeof prompt !== "string") {
@@ -39,9 +47,9 @@ Deno.serve(async (req: Request) => {
 
     let geminiResponse: Response;
     try {
-      geminiResponse = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
+      geminiResponse = await fetch(`${GEMINI_API_URL}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: {
@@ -61,8 +69,9 @@ Deno.serve(async (req: Request) => {
           { status: 504, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
+      const errMsg = err instanceof Error ? err.message : "Unknown network error";
       return new Response(
-        JSON.stringify({ error: `Network error calling Gemini API: ${err.message}` }),
+        JSON.stringify({ error: `Network error calling Gemini API: ${errMsg}` }),
         { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -96,9 +105,25 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const geminiData = await geminiResponse.json();
+    let geminiData: Record<string, unknown>;
+    try {
+      geminiData = await geminiResponse.json();
+    } catch {
+      return new Response(
+        JSON.stringify({ error: "Gemini returned an invalid JSON response." }),
+        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    const candidates = (geminiData?.candidates as Array<{ content?: { parts?: Array<{ text?: string }> } }>) ?? [];
+    if (candidates.length === 0) {
+      const blockReason = (geminiData?.promptFeedback as Record<string, unknown>)?.blockReason;
+      return new Response(
+        JSON.stringify({ error: blockReason ? `Gemini blocked the prompt: ${blockReason}` : "Gemini returned no candidates." }),
+        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
     const text =
-      geminiData?.candidates?.[0]?.content?.parts
+      candidates[0]?.content?.parts
         ?.map((p: { text?: string }) => p.text ?? "")
         .join("") ?? "";
 
@@ -114,8 +139,9 @@ Deno.serve(async (req: Request) => {
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json", "X-Provider": "gemini-2.5-flash" } }
     );
   } catch (err) {
+    const errMsg = err instanceof Error ? err.message : "Internal server error";
     return new Response(
-      JSON.stringify({ error: err?.message ?? "Internal server error" }),
+      JSON.stringify({ error: errMsg }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

@@ -43,8 +43,8 @@ function ForgotPasswordPage() {
           <form onSubmit={handleSubmit} className="space-y-4 rounded-xl border border-border bg-card p-6">
             {error && (<div className="rounded-lg bg-destructive/10 border border-destructive/30 px-4 py-3 text-sm text-destructive">{error}</div>)}
             <div className="space-y-2">
-              <label className="text-sm font-medium">Email</label>
-              <div className="relative"><Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" /><Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className="pl-9" required /></div>
+              <label htmlFor="forgot-email" className="text-sm font-medium">Email</label>
+              <div className="relative"><Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" /><Input id="forgot-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className="pl-9" required /></div>
             </div>
             <Button type="submit" className="w-full" disabled={loading}>{loading ? 'Sending...' : 'Send Reset Link'}</Button>
             <p className="text-sm text-muted-foreground text-center"><Link to="/sign-in" className="text-muted-foreground hover:text-foreground">Back to sign in</Link></p>

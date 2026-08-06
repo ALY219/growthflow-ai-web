@@ -13,14 +13,10 @@ import type { GenerationConfig, GenerationError, WebsiteBlueprint } from '@/lib/
    Providers are swappable — register a new AIProvider implementation
    in the provider registry below. */
 
-export type ProviderName = 'gemini' | 'openai' | 'claude' | 'deepseek'
+export type ProviderName = 'gemini'
 
 const providers: Record<ProviderName, AIProvider> = {
   gemini: new GeminiProvider(),
-  // Future providers — not yet implemented:
-  openai: new GeminiProvider(),
-  claude: new GeminiProvider(),
-  deepseek: new GeminiProvider(),
 }
 
 let activeProvider: ProviderName = 'gemini'

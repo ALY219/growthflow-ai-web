@@ -64,7 +64,7 @@ function ProjectsPage() {
                     <p className="font-semibold truncate">{p.name}</p>
                     <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{p.description || 'No description'}</p>
                     <p className="text-xs text-muted-foreground mt-3">{new Date(p.created_at).toLocaleDateString()}</p>
-                    <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); deleteProject.mutate(p.id) }} className="text-xs text-destructive hover:underline mt-2">Delete</button>
+                    <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (confirm(`Delete "${p.name}"? This cannot be undone.`)) deleteProject.mutate(p.id) }} className="text-xs text-destructive hover:underline mt-2">Delete</button>
                   </CardContent>
                 </Card>
               </Link>

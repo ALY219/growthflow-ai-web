@@ -75,7 +75,6 @@ export interface GenerationJob {
 }
 
 export function useGenerationJobs(projectId?: string) {
-  const [hasActive, setHasActive] = useState(false)
   const query = useQuery<GenerationJob[]>({
     queryKey: ['generation-jobs', projectId],
     queryFn: async () => {
@@ -87,13 +86,11 @@ export function useGenerationJobs(projectId?: string) {
       return data ?? []
     },
     enabled: !!projectId,
-    refetchInterval: hasActive ? 3000 : false,
+    refetchInterval: (query) => {
+      const jobs = query.state.data ?? []
+      return jobs.some((j) => j.status === 'pending' || j.status === 'generating') ? 3000 : false
+    },
   })
-
-  useEffect(() => {
-    const jobs = query.data ?? []
-    setHasActive(jobs.some((j) => j.status === 'pending' || j.status === 'generating'))
-  }, [query.data])
 
   return query
 }

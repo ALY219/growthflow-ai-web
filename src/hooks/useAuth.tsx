@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from 'react'
 import type { Session, User } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 
@@ -24,6 +24,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(data.session)
       setUser(data.session?.user ?? null)
       setLoading(false)
+    }).catch(() => {
+      setLoading(false)
     })
 
     const { data: unsub } = supabase.auth.onAuthStateChange((_event, sess) => {
@@ -35,27 +37,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => unsub.subscription.unsubscribe()
   }, [])
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = useCallback(async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password })
     return { error: error?.message ?? null }
-  }
+  }, [])
 
-  const signUp = async (email: string, password: string) => {
+  const signUp = useCallback(async (email: string, password: string) => {
     const { error } = await supabase.auth.signUp({ email, password })
     return { error: error?.message ?? null }
-  }
+  }, [])
 
-  const signOut = async () => {
-    await supabase.auth.signOut()
-  }
+  const signOut = useCallback(async () => {
+    await supabase.auth.signOut().catch(() => {})
+  }, [])
 
-  const resetPassword = async (email: string) => {
+  const resetPassword = useCallback(async (email: string) => {
     const { error } = await supabase.auth.resetPasswordForEmail(email)
     return { error: error?.message ?? null }
-  }
+  }, [])
+
+  const value = { user, session, loading, signIn, signUp, signOut, resetPassword }
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signIn, signUp, signOut, resetPassword }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   )

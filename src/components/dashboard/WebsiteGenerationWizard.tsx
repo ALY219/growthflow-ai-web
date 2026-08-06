@@ -1,9 +1,6 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import {
-  ArrowLeft, ArrowRight, Check, X, Plus, Building2, Users, Palette,
-  Layout, Zap, CheckCircle2, Save, Sparkles,
-} from 'lucide-react'
+import { ArrowLeft, ArrowRight, Check, X, Plus, Building2, Users, Palette, LayoutGrid as Layout, Zap, CircleCheck as CheckCircle2, Save, Sparkles } from 'lucide-react'
 import { Button, Input, Textarea } from '@blinkdotnew/ui'
 import {
   type GenerationConfig, type Industry, type WebsiteGoal, type CustomerType,
@@ -56,11 +53,20 @@ export function WebsiteGenerationWizard({
   const [step, setStep] = useState(0)
   const [saved, setSaved] = useState(false)
 
+  const savedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   const update = useCallback((patch: Partial<GenerationConfig>) => {
     onConfigChange({ ...config, ...patch })
     setSaved(true)
-    setTimeout(() => setSaved(false), 1500)
+    if (savedTimerRef.current) clearTimeout(savedTimerRef.current)
+    savedTimerRef.current = setTimeout(() => setSaved(false), 1500)
   }, [config, onConfigChange])
+
+  useEffect(() => {
+    return () => {
+      if (savedTimerRef.current) clearTimeout(savedTimerRef.current)
+    }
+  }, [])
 
   const togglePage = (page: StandardPage) => {
     const has = config.selectedPages.includes(page)

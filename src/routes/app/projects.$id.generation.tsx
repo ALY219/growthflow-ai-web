@@ -65,9 +65,11 @@ function GenerationPage() {
     } catch (err) {
       setError({ type: 'unknown', message: err instanceof Error ? err.message : 'An unexpected error occurred.' })
       setViewState('error')
-      if (latestJob) {
-        await updateJob.mutateAsync({ id: latestJob.id, status: 'failed' })
-      }
+      try {
+        if (latestJob) await updateJob.mutateAsync({ id: latestJob.id, status: 'failed' })
+      } catch { /* ignore secondary failure */ }
+    } finally {
+      runningRef.current = false
     }
   }, [latestJob, updateJob])
 
@@ -84,7 +86,8 @@ function GenerationPage() {
         setBlueprint(stored)
         setViewState('success')
       } else {
-        runGeneration()
+        setError({ type: 'unknown', message: 'Blueprint data is missing from the completed job.' })
+        setViewState('error')
       }
     } else if (latestJob && latestJob.status === 'failed') {
       setViewState('error')
